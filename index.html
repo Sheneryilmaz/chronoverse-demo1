@@ -5,12 +5,11 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no"/>
   <title>ChronoVerse</title>
 
-  <!-- PWA -->
+  <!-- PWA meta -->
   <meta name="theme-color" content="#2a7aee">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black">
-  <link rel="manifest" href="manifest.json">
   <link rel="apple-touch-icon" href="icon.png"/>
 
   <!-- Leaflet -->
@@ -21,11 +20,25 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.7/dist/umd/supabase.min.js"></script>
 
   <style>
+    :root{
+      --panelW: 20vw;
+      --panelMin: 220px;
+      --panelMax: 360px;
+      --panelBg: rgba(255,255,255,.80);
+      --panelBgHover: rgba(255,255,255,.95);
+      --panelBlur: 8px;
+    }
     * { box-sizing: border-box; }
     html,body { height:100%; margin:0; font-family: Inter, Arial, sans-serif; background:#fff; }
     .app { display:flex; height:100vh; width:100vw; }
 
-    .sidebar, .right { width:320px; min-width:260px; max-width:380px; background:#fff; border-right:1px solid #e5e5e5; padding:14px; overflow:auto; }
+    .sidebar, .right {
+      width: var(--panelW); min-width: var(--panelMin); max-width: var(--panelMax);
+      background: var(--panelBg); backdrop-filter: blur(var(--panelBlur));
+      border-right:1px solid #e5e5e5; padding:14px; overflow:auto;
+      transition: background .2s ease;
+    }
+    .sidebar:hover, .right:hover { background: var(--panelBgHover); }
     .right { border-right:none; border-left:1px solid #e5e5e5; }
     .mapwrap { flex:1; position:relative; display:flex; flex-direction:column; }
     #map { flex:1; }
@@ -43,29 +56,31 @@
     .submenu.active { display:block; }
     .muted { color:#666; font-size:13px; }
     .kpi { margin:4px 0; }
+    .badge { display:inline-flex; align-items:center; justify-content:center; min-width:20px; height:20px; border-radius:999px; background:#e11d48; color:#fff; font-size:12px; padding:0 6px; }
 
-    .photo-form, .overlay {
-      position:absolute; left:50%; top:50%; transform:translate(-50%,-50%);
-      background:#fff; border-radius:14px; box-shadow:0 14px 36px rgba(0,0,0,.18);
-      padding:16px; width:360px; z-index:1001; display:none;
-    }
-    .photo-form h3 { margin:0 0 8px 0; }
-    .photo-form.active { display:block; }
-    .overlay { z-index:1000; background:rgba(0,0,0,.32); width:100%; height:100%; left:0; top:0; transform:none; }
-    .overlay.active { display:block; }
-
-    .hint { position:absolute; top:10px; left:50%; transform:translateX(-50%); background:#111; color:#fff; padding:6px 10px; border-radius:999px; font-size:12px; display:none; z-index:500; }
-    .hint.active { display:inline-block; }
-
+    /* Popups & thumbnails */
     .popup { width:280px; }
     .popup img { width:100%; border-radius:12px; margin-bottom:6px; }
     .popup .like { cursor:pointer; font-size:18px; user-select:none; }
     .popup .comments { max-height:160px; overflow:auto; border-top:1px solid #eee; margin-top:6px; padding-top:6px; font-size:13px; }
     .popup .menu-trigger { margin-left:auto; cursor:pointer; font-size:18px; }
 
-    /* Thumbnail markers */
     .thumb-marker { width:42px; height:42px; border-radius:10px; overflow:hidden; box-shadow:0 6px 18px rgba(0,0,0,.22); border:2px solid #fff; }
     .thumb-marker img { width:100%; height:100%; object-fit:cover; display:block; }
+
+    /* Map hint + overlay + modals */
+    .hint { position:absolute; top:10px; left:50%; transform:translateX(-50%); background:#111; color:#fff; padding:6px 10px; border-radius:999px; font-size:12px; display:none; z-index:500; }
+    .hint.active { display:inline-block; }
+
+    .overlay { position:absolute; left:0; top:0; right:0; bottom:0; background:rgba(0,0,0,.32); z-index:1000; display:none; }
+    .overlay.active { display:block; }
+
+    .photo-form {
+      position:absolute; left:50%; top:50%; transform:translate(-50%,-50%);
+      background:#fff; border-radius:14px; box-shadow:0 14px 36px rgba(0,0,0,.18);
+      padding:16px; width:360px; z-index:1001; display:none;
+    }
+    .photo-form.active { display:block; }
 
     /* Dropdown */
     .dropdown { position:relative; }
@@ -74,37 +89,53 @@
     .dropdown-menu button { width:100%; text-align:left; padding:10px 12px; border:0; background:#fff; cursor:pointer; border-radius:10px; }
     .dropdown-menu button:hover { background:#f7f8fc; }
 
-    /* Bildirim açılır menü */
+    /* Notifications dropdown */
     .notifWrap { position:relative; }
     .notifDropdown { position:absolute; right:0; top:40px; width:320px; max-height:60vh; overflow:auto; background:#fff; border:1px solid #eaeaea; border-radius:14px; box-shadow:0 12px 30px rgba(0,0,0,.14); display:none; }
     .notifDropdown.active { display:block; }
     .notifItem { padding:10px 12px; border-bottom:1px solid #f1f1f1; }
     .notifItem:last-child { border-bottom:0; }
 
-    /* Liste Modal */
-    .list-modal { position:absolute; left:50%; top:50%; transform:translate(-50%,-50%); width:380px; max-height:60vh; overflow:auto; z-index:1002; background:#fff; border-radius:14px; box-shadow:0 14px 36px rgba(0,0,0,.18); padding:14px; display:none; }
-    .list-modal.active { display:block; }
+    /* Sağ panel içi bölümler */
+    .section { border:1px dashed #e0e0e0; border-radius:12px; padding:12px; margin:10px 0; }
+    .section.hidden { display:none; }
 
-    /* Profil altı feature butonları */
+    /* Feature grid */
     .featureBtns { display:grid; grid-template-columns: 1fr 1fr; gap:8px; margin-top:10px; }
 
-    /* Mobil uyumluluk */
+    /* Map search box (top-right) */
+    .map-search {
+      position:absolute; right:10px; top:10px; z-index:700;
+      background:rgba(255,255,255,.92); backdrop-filter: blur(8px);
+      border:1px solid #e5e5e5; border-radius:12px; padding:8px; display:flex; gap:6px; align-items:center;
+      width:min(320px, 60vw);
+    }
+    .map-search input { flex:1; padding:8px; border:1px solid #d8dbe2; border-radius:8px; }
+    .map-search .results { position:absolute; right:0; top:46px; background:#fff; border:1px solid #e5e5e5; border-radius:10px; width:100%; max-height:50vh; overflow:auto; display:none; }
+    .map-search .results.active { display:block; }
+    .map-search .results div { padding:8px 10px; cursor:pointer; }
+    .map-search .results div:hover { background:#f7f8fc; }
+
+    /* Avatarlı kullanıcı listesi */
+    .user-line { display:flex; gap:8px; align-items:center; }
+    .avatar-sm { width:22px; height:22px; border-radius:50%; object-fit:cover; background:#eee; border:1px solid #fff; }
+
+    /* Mobile */
     #menuToggle {
       display:none; position:absolute; top:10px; left:10px; z-index:3000; background:#fff; padding:8px 10px;
       border-radius:12px; cursor:pointer; box-shadow:0 2px 6px rgba(0,0,0,.2);
     }
+    @media (max-width:1024px){ :root{ --panelW: 26vw; } }
+    @media (max-width:900px){ :root{ --panelW: 30vw; --panelMax: 330px; } }
     @media (max-width:768px) {
       #menuToggle { display:block; }
       .sidebar, .right {
-        position:absolute; top:0; bottom:0; width:82%; z-index:2000;
+        position:absolute; top:0; bottom:0; width:88%; z-index:2000;
         transform:translateX(-100%); transition:transform .28s ease-in-out; background:#fff;
       }
       .sidebar.active { transform:translateX(0); }
       .right.active { transform:translateX(0); right:0; left:auto; }
     }
-
-    /* Install banner (Android) */
-    #installBanner { position:fixed; left:50%; transform:translateX(-50%); bottom:20px; z-index:3500; display:none; }
   </style>
 </head>
 <body>
@@ -123,11 +154,18 @@
       <input id="searchUser" type="text" placeholder="Kullanıcı ara..." style="width:100%; margin-bottom:10px;"/>
       <ul id="searchResults"></ul>
       <ul id="topList"></ul>
-      <p class="muted" style="margin-top:10px;">Bir kullanıcıya tıklayın → <b>yalnızca o kişinin fotoğrafları</b> haritada görünsün. Alt menüden <b>Follow</b> / <b>Unfollow</b>.</p>
+      <p class="muted" style="margin-top:10px;">Bir kullanıcıya tıklayın → sadece onun fotoğrafları haritada görünsün. Alt menüden Follow/Unfollow.</p>
     </aside>
 
     <!-- HARİTA -->
     <main class="mapwrap">
+      <!-- Search box -->
+      <div class="map-search">
+        <input id="mapSearchInput" type="text" placeholder="Adres / yer ara…" />
+        <button id="mapSearchBtn" class="btn">Ara</button>
+        <div id="mapSearchResults" class="results"></div>
+      </div>
+
       <div id="map"></div>
       <div id="hint" class="hint">Haritadan konum seçin…</div>
 
@@ -141,7 +179,7 @@
           <button id="pickOnMap" class="btn ghost">Haritadan seç</button>
           <small class="muted">Seçmezsen harita merkezi kullanılır</small>
         </div>
-        <input type="file" id="fileInput" accept="image/*"/>
+        <input type="file" id="fileInput" accept="image/*" />
         <div id="previewWrap" style="display:none; margin-top:6px;"></div>
         <div class="row" style="justify-content:flex-end; gap:8px; margin-top:8px;">
           <button id="cancelUpload" class="btn">İptal</button>
@@ -149,34 +187,8 @@
         </div>
         <div id="uploadErr" class="error"></div>
       </div>
-
-      <!-- Fotoğraf Düzenleme Modalı -->
-      <div id="editPhotoModal" class="photo-form">
-        <h3>Fotoğrafı Düzenle</h3>
-        <div id="editPhotoLoc" class="muted">Konum: –</div>
-        <div class="row" style="justify-content:space-between; margin-bottom:6px;">
-          <button id="editPickOnMap" class="btn ghost">Haritadan seç</button>
-          <small class="muted">Sadece konumu güncelle</small>
-        </div>
-        <input id="editTags" type="text" placeholder="Etiketler (virgülle) — opsiyonel"/>
-        <div class="row" style="justify-content:flex-end; gap:8px; margin-top:8px;">
-          <button id="cancelEditPhoto" class="btn">İptal</button>
-          <button id="saveEditPhoto" class="btn primary">Kaydet</button>
-        </div>
-        <div id="editPhotoErr" class="error"></div>
-      </div>
-
-      <!-- Liste Modal -->
-      <div id="listModal" class="list-modal">
-        <h3 id="listTitle" style="margin-top:0;">Liste</h3>
-        <ul id="listContent"></ul>
-        <div class="row" style="justify-content:flex-end; margin-top:10px;">
-          <button id="closeList" class="btn">Kapat</button>
-        </div>
-      </div>
+      <!-- SAĞ PANEL -->
     </main>
-
-    <!-- SAĞ PANEL -->
     <aside class="right">
       <button id="addPhoto" class="btn primary" style="width:100%; margin-bottom:10px;">+ Fotoğraf</button>
 
@@ -230,11 +242,39 @@
         <div class="kpi">Posts: <b id="mePosts">0</b></div>
         <div class="kpi">Followers: <b id="meFollowers" style="cursor:pointer; color:#2a7aee;">0</b></div>
         <div class="kpi">Following: <b id="meFollowing" style="cursor:pointer; color:#2a7aee;">0</b></div>
-        <div class="row" style="justify-content:space-between; align-items:center;">
-          <button id="editProfile" class="btn">Profili Düzenle</button>
-          <button id="btnLogout" class="btn">Çıkış</button>
+
+        <!-- Profile Settings (butonla aç/kapa) -->
+        <div class="row" style="gap:8px; margin-top:8px;">
+          <button id="toggleProfileSettings" class="btn">Profile Settings</button>
+          <button id="togglePhotoSettings" class="btn">Photo Settings</button>
         </div>
-        <!-- İstenilen feature butonları -->
+
+        <div id="profileSettingsSection" class="section hidden">
+          <div class="row" style="align-items:center; gap:12px; margin-bottom:10px;">
+            <img id="avatarPreview" src="" alt="avatar" style="width:56px; height:56px; border-radius:50%; object-fit:cover; background:#eee;"/>
+            <input id="editAvatar" type="file" accept="image/*"/>
+          </div>
+          <input id="editUsername" type="text" placeholder="Kullanıcı adı"/>
+
+          <div style="margin-top:8px;">
+            <button id="btnTogglePass" class="btn">Change Password</button>
+            <div id="passWrap" class="row" style="gap:8px; margin-top:6px;">
+              <input id="newPass" type="password" placeholder="Yeni şifre" disabled/>
+              <input id="newPass2" type="password" placeholder="Yeni şifre tekrar" disabled/>
+            </div>
+          </div>
+          <div class="row" style="justify-content:flex-end; gap:8px; margin-top:10px;">
+            <button id="saveEdit" class="btn primary">Kaydet</button>
+          </div>
+          <div id="editErr" class="error"></div>
+        </div>
+
+        <!-- Photo Settings: sağ panel içinde -->
+        <div id="photoSettingsSection" class="section hidden">
+          <h4 style="margin:0 0 8px 0;">Fotoğraflarım</h4>
+          <div id="psList"></div>
+        </div>
+
         <div class="featureBtns">
           <button class="btn ghost feat" data-key="vrtour">VR Tour</button>
           <button class="btn ghost feat" data-key="challenges">Challenges</button>
@@ -243,63 +283,85 @@
           <button class="btn ghost feat" data-key="nav">Navigation</button>
           <button class="btn ghost feat" data-key="timeline">TimeLine</button>
         </div>
-      </div>
 
-      <!-- PROFİL DÜZENLE -->
-      <div id="editProfileModal" class="photo-form">
-        <h3>Profili Düzenle</h3>
-        <input id="editUsername" type="text" placeholder="Yeni kullanıcı adı"/>
-        <input id="editAvatar" type="file" accept="image/*"/>
-        <div class="row" style="gap:8px;">
-          <input id="newPass" type="password" placeholder="Yeni şifre (opsiyonel)"/>
-          <input id="newPass2" type="password" placeholder="Yeni şifre tekrar"/>
+        <div class="row" style="justify-content:flex-end; margin-top:10px;">
+          <button id="btnLogout" class="btn">Çıkış</button>
         </div>
-        <div class="row" style="justify-content:flex-end; gap:8px;">
-          <button id="cancelEdit" class="btn">İptal</button>
-          <button id="saveEdit" class="btn primary">Kaydet</button>
-        </div>
-        <div id="editErr" class="error"></div>
       </div>
     </aside>
   </div>
 
-  <!-- =========================
-       Supabase Client
-  ========================== -->
+  <!-- Supabase Client -->
   <script>
+    // Supabase ayarların
     const supabaseUrl = "https://bzewcgcwtdqnorlclcyd.supabase.co";
     const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ6ZXdjZ2N3dGRxbm9ybGNsY3lkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTY4MTE2ODgsImV4cCI6MjA3MjM4NzY4OH0.s8GnQGeyhoXL-R2acBtdPmI3RAYLxk-CwvyW001hY6w";
-    const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
+    const supabase = window.supabase.createClient(supabaseUrl, supabaseKey, {
+      auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true }
+    });
   </script>
 
-  <!-- =========================
-       App JS
-  ========================== -->
+  <!-- App JS -->
   <script>
-    const map = L.map("map").setView([39, 35], 6);
+    // Manifest linkini sadece http/https altında ekle (file:// CORS uyarısını engeller)
+    (function(){
+      var proto = window.location.protocol;
+      if (proto === "http:" || proto === "https:") {
+        var l = document.createElement('link');
+        l.rel = 'manifest';
+        l.href = 'manifest.json';
+        document.head.appendChild(l);
+      }
+    })();
+
+    // Helpers
+    function qs(sel){ return document.querySelector(sel); }
+    function escapeHtml(str){
+      str = str || "";
+      return str.replace(/[&<>"']/g, function(m){ return ({ "&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#039;" })[m]; });
+    }
+    async function compressImageIfNeeded(file, maxDim, maxMB){
+      try{
+        if (!file || !/^image\//.test(file.type)) return file;
+        var url = URL.createObjectURL(file);
+        var img = await new Promise(function(res, rej){ var im = new Image(); im.onload=()=>res(im); im.onerror=rej; im.src=url; });
+        var w = img.width, h = img.height, scale = Math.min(1, maxDim/Math.max(w,h));
+        var c = document.createElement('canvas'); c.width = Math.round(w*scale); c.height = Math.round(h*scale);
+        var ctx=c.getContext('2d'); ctx.drawImage(img,0,0,c.width,c.height);
+        var q=0.9, blob = await new Promise(r=>c.toBlob(r,'image/jpeg',q));
+        while(blob && blob.size>maxMB*1024*1024 && q>0.5){ q-=0.1; blob=await new Promise(r=>c.toBlob(r,'image/jpeg',q)); }
+        URL.revokeObjectURL(url);
+        if (!blob) return file;
+        if (blob.size < file.size) return new File([blob], (file.name.split('.').slice(0,-1).join('.')||'image')+'.jpg', {type:'image/jpeg'});
+        return file;
+      }catch(e){ return file; }
+    }
+
+    // Leaflet Map
+    var map = L.map("map", { tapTolerance: 15 }).setView([39, 35], 6);
     L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", { attribution: "&copy; OpenStreetMap" }).addTo(map);
 
-    const markers = [];
-    let pendingLatLng = null;
-    let currentFilterUserId = null;
+    function thumbIcon(url){
+      return L.divIcon({
+        className: '',
+        html: '<div class="thumb-marker"><img src="'+url+'" alt="" loading="lazy" decoding="async"/></div>',
+        iconSize: [42,42], iconAnchor:[21,21], popupAnchor:[0,-18]
+      });
+    }
 
-    let editingPhoto = null;
-    let pendingEditLatLng = null;
-
-    const qs = (sel) => document.querySelector(sel);
-    const $ = {
+    var markers = [];
+    function clearMarkers(){ while(markers.length){ try{ map.removeLayer(markers.pop()); }catch(e){} } }
+    // Refs
+    var $ = {
       // left
       topList: qs("#topList"), homeBtn: qs("#homeBtn"), refreshBtn: qs("#refreshBtn"),
       searchUser: qs("#searchUser"), searchResults: qs("#searchResults"),
-      // map modal
+      // map
+      mapSearchInput: qs("#mapSearchInput"), mapSearchBtn: qs("#mapSearchBtn"), mapSearchResults: qs("#mapSearchResults"),
       hint: qs("#hint"), overlay: qs("#overlay"), photoForm: qs("#photoForm"),
       chosenLoc: qs("#chosenLoc"), fileInput: qs("#fileInput"), uploadErr: qs("#uploadErr"),
       cancelUpload: qs("#cancelUpload"), confirmUpload: qs("#confirmUpload"),
       pickOnMap: qs("#pickOnMap"), previewWrap: qs("#previewWrap"),
-      // edit photo
-      editPhotoModal: qs("#editPhotoModal"), editPhotoLoc: qs("#editPhotoLoc"),
-      editPickOnMap: qs("#editPickOnMap"), editTags: qs("#editTags"),
-      cancelEditPhoto: qs("#cancelEditPhoto"), saveEditPhoto: qs("#saveEditPhoto"), editPhotoErr: qs("#editPhotoErr"),
       // right
       addPhoto: qs("#addPhoto"),
       loginBox: qs("#loginBox"), regBox: qs("#regBox"), userBox: qs("#userBox"),
@@ -311,56 +373,68 @@
       meEmail: qs("#meEmail"), meCoin: qs("#meCoin"), mePosts: qs("#mePosts"),
       meFollowers: qs("#meFollowers"), meFollowing: qs("#meFollowing"),
       btnLogout: qs("#btnLogout"),
-      editProfile: qs("#editProfile"), editProfileModal: qs("#editProfileModal"),
+      // profile settings in-panel
+      toggleProfileSettings: qs("#toggleProfileSettings"),
+      togglePhotoSettings: qs("#togglePhotoSettings"),
+      profileSettingsSection: qs("#profileSettingsSection"),
+      photoSettingsSection: qs("#photoSettingsSection"),
       editUsername: qs("#editUsername"), editAvatar: qs("#editAvatar"),
-      newPass: qs("#newPass"), newPass2: qs("#newPass2"),
-      cancelEdit: qs("#cancelEdit"), saveEdit: qs("#saveEdit"), editErr: qs("#editErr"),
+      avatarPreview: qs("#avatarPreview"),
+      btnTogglePass: qs("#btnTogglePass"), newPass: qs("#newPass"), newPass2: qs("#newPass2"),
+      saveEdit: qs("#saveEdit"), editErr: qs("#editErr"),
+      psList: qs("#psList"),
       // notifications
-      notifDropdown: qs("#notifDropdown"),
-      notifList: qs("#notifList"), notifBadge: qs("#notifBadge"),
-      btnNotif: qs("#btnNotif"), btnReadAll: qs("#btnReadAll"), closeNotif: qs("#closeNotif"),
-      // list modal
-      listModal: qs("#listModal"), listTitle: qs("#listTitle"), listContent: qs("#listContent"), closeList: qs("#closeList"),
+      notifDropdown: qs("#notifDropdown"), notifList: qs("#notifList"),
+      notifBadge: qs("#notifBadge"), btnNotif: qs("#btnNotif"), btnReadAll: qs("#btnReadAll"), closeNotif: qs("#closeNotif")
     };
 
-    function setModal(open) { $.overlay.classList.toggle("active", open); $.photoForm.classList.toggle("active", open); }
-    function setEditModal(open) { $.overlay.classList.toggle("active", open); $.editProfileModal.classList.toggle("active", open); }
-    function setListModal(open) { $.overlay.classList.toggle("active", open); $.listModal.classList.toggle("active", open); }
-    function setEditPhotoModal(open) { $.overlay.classList.toggle("active", open); $.editPhotoModal.classList.toggle("active", open); }
-    function clearMarkers() { markers.splice(0).forEach(m => map.removeLayer(m)); }
-    function escapeHtml(str){ return (str || "").replace(/[&<>"']/g, m => ({ "&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#039;" }[m])); }
+    function setModal(open){ $.overlay.classList.toggle("active", open); $.photoForm.classList.toggle("active", open); }
 
-    function thumbIcon(url){
-      return L.divIcon({
-        className: '',
-        html: `<div class="thumb-marker"><img src="${url}" alt=""/></div>`,
-        iconSize: [42,42], iconAnchor:[21,21], popupAnchor:[0,-18]
-      });
+    // Auth / session
+    var notifChannel = null;
+    async function getSessionUser(){
+      var s = await supabase.auth.getSession();
+      return s && s.data && s.data.session ? s.data.session.user : null;
     }
 
-    document.addEventListener('click', (e)=>{
-      document.querySelectorAll('.dropdown-menu').forEach(m=> m.classList.remove('active'));
-      if (!e.target.closest('.notifWrap')) $.notifDropdown.classList.remove('active');
-    });
-
-    // ===== Auth & Session =====
-    let notifChannel = null;
-
-    async function getSessionUser() {
-      const { data: { session } } = await supabase.auth.getSession();
-      return session?.user ?? null;
+    async function getAvatarUrl(userId){
+      // 1) profile.avatar_url → 2) first photo → 3) placeholder
+      var pr = await supabase.from("user_profiles").select("avatar_url").eq("id", userId).single();
+      if (pr && pr.data && pr.data.avatar_url) return pr.data.avatar_url;
+      var fp = await supabase.from("photos").select("image_url").eq("user_id", userId).order("id", {ascending:true}).limit(1);
+      if (fp && fp.data && fp.data.length) return fp.data[0].image_url;
+      // tiny svg placeholder
+      return "data:image/svg+xml;utf8,"+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64"><rect width="100%" height="100%" fill="#e5e7eb"/><text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" fill="#9ca3af" font-size="14">?</text></svg>');
     }
 
-    async function refreshUI() {
-      const user = await getSessionUser();
-      if (!user) {
+    async function refreshAvatarPreview(userId){
+      var url = await getAvatarUrl(userId);
+      $.avatarPreview.src = url || "";
+    }
+
+    async function updateUserPanel(userId){
+      var profileRes = await supabase.from("user_profiles").select("*").eq("id", userId).single();
+      var profile = profileRes ? profileRes.data : null;
+      if (profile){
+        $.meCoin.textContent = (profile.coin || 0);
+        $.mePosts.textContent = (profile.posts || 0);
+      }
+      var f1 = await supabase.from("follows").select("*",{count:"exact",head:true}).eq("following", userId);
+      $.meFollowers.textContent = f1 && typeof f1.count === 'number' ? f1.count : 0;
+      var f2 = await supabase.from("follows").select("*",{count:"exact",head:true}).eq("follower", userId);
+      $.meFollowing.textContent = f2 && typeof f2.count === 'number' ? f2.count : 0;
+    }
+
+    async function refreshUI(){
+      var user = await getSessionUser();
+      if (!user){
         $.loginBox.style.display = "block";
         $.regBox.style.display = "none";
         $.userBox.style.display = "none";
         $.notifList.innerHTML = ""; $.notifBadge.style.display = "none";
         $.notifDropdown.classList.remove('active');
-        if (notifChannel) { supabase.removeChannel(notifChannel); notifChannel = null; }
-        await loadPhotos(); await loadTopUsers();
+        if (notifChannel) { try{ supabase.removeChannel(notifChannel); }catch(e){} notifChannel = null; }
+        await loadPhotos(null); await loadTopUsers();
         return;
       }
       $.loginBox.style.display = "none";
@@ -372,581 +446,476 @@
       await loadTopUsers();
       await loadNotifications(user.id);
       subscribeNotifications(user.id);
+      await refreshAvatarPreview(user.id);
     }
+    supabase.auth.onAuthStateChange(function(){ refreshUI(); });
 
-    supabase.auth.onAuthStateChange((_event, _session) => { refreshUI(); });
-
-    async function updateUserPanel(userId) {
-      const { data: profile } = await supabase.from("user_profiles").select("*").eq("id", userId).single();
-      if (profile) { $.meCoin.textContent = profile.coin ?? 0; $.mePosts.textContent = profile.posts ?? 0; }
-      const { count: followers } = await supabase.from("follows").select("*",{count:"exact",head:true}).eq("following", userId);
-      $.meFollowers.textContent = followers ?? 0;
-      const { count: following } = await supabase.from("follows").select("*",{count:"exact",head:true}).eq("follower", userId);
-      $.meFollowing.textContent = following ?? 0;
-    }
-
-    // ===== Notifications =====
+    // Notifications
     function typeLabel(t){ return t === 'like' ? '❤️ Beğeni' : t === 'comment' ? '💬 Yorum' : '➕ Takip'; }
-    function fmtTime(iso){ try{ return new Date(iso).toLocaleString(); }catch{ return ""; } }
+    function fmtTime(iso){ try{ return new Date(iso).toLocaleString(); }catch(e){ return ""; } }
 
     async function loadNotifications(userId){
-      const { data, error } = await supabase
-        .from("notifications")
+      var res = await supabase.from("notifications")
         .select("id,type,message,is_read,created_at,photo_id,comment_id,actor")
         .eq("recipient", userId)
         .order("created_at", { ascending:false })
         .limit(40);
-      if (error) { console.error("loadNotifications:", error.message); return; }
+      if (!res || res.error) return;
+      var data = res.data || [];
 
-      const actorIds = [...new Set((data||[]).map(n=>n.actor).filter(Boolean))];
-      let nameMap = {};
+      var actorIds = [];
+      for (var i=0;i<data.length;i++){ var a = data[i].actor; if (a && actorIds.indexOf(a)===-1) actorIds.push(a); }
+      var nameMap = {};
       if (actorIds.length){
-        const { data: profs } = await supabase.from('user_profiles').select('id,username').in('id', actorIds);
-        (profs||[]).forEach(p => nameMap[p.id] = p.username);
+        var p = await supabase.from('user_profiles').select('id,username').in('id', actorIds);
+        var arr = p && p.data ? p.data : [];
+        for (var j=0;j<arr.length;j++){ nameMap[arr[j].id] = arr[j].username; }
       }
 
-      const unread = (data||[]).filter(n => !n.is_read).length;
-      $.notifBadge.textContent = unread;
+      var unread = 0; for (var k=0;k<data.length;k++){ if (!data[k].is_read) unread++; }
+      $.notifBadge.textContent = String(unread);
       $.notifBadge.style.display = unread > 0 ? "inline-flex" : "none";
 
-      $.notifList.innerHTML = (data||[]).map(n => {
-        const actorName = nameMap[n.actor] ? `<b>${escapeHtml(nameMap[n.actor])}</b> ` : '';
-        const msg = n.type === 'like' ? `${actorName}fotoğrafını beğendi.`
-                  : n.type === 'comment' ? `${actorName}yorum yaptı.`
-                  : `${actorName}seni takip etti.`;
-        return `
-          <div class="notifItem ${n.is_read ? '' : 'unread'}">
-            <div><span>${typeLabel(n.type)}</span> — ${msg}</div>
-            <div class="small">${fmtTime(n.created_at)}</div>
-            <div class="row" style="justify-content:flex-end; gap:8px; margin-top:6px;">
-              ${n.photo_id ? `<button class="btn ghost goPhoto" data-id="${n.photo_id}">Fotoğrafa git</button>` : ''}
-              ${!n.is_read ? `<button class="btn markRead" data-id="${n.id}">Okundu ✓</button>` : ''}
-            </div>
-          </div>`;
-      }).join("");
+      var html = '';
+      for (var t=0;t<data.length;t++){
+        var n = data[t];
+        var actorName = nameMap[n.actor] ? '<b>'+escapeHtml(nameMap[n.actor])+'</b> ' : '';
+        var msg = n.type === 'like' ? (actorName+'fotoğrafını beğendi.')
+                : n.type === 'comment' ? (actorName+'yorum yaptı.')
+                : (actorName+'seni takip etti.');
+        html += '<div class="notifItem '+(n.is_read?'':'unread')+'">'+
+                '<div><span>'+typeLabel(n.type)+'</span> — '+msg+'</div>'+
+                '<div class="small">'+fmtTime(n.created_at)+'</div>'+
+                '<div class="row" style="justify-content:flex-end; gap:8px; margin-top:6px;">'+
+                (n.photo_id ? '<button class="btn ghost goPhoto" data-id="'+n.photo_id+'">Fotoğrafa git</button>' : '')+
+                (!n.is_read ? '<button class="btn markRead" data-id="'+n.id+'">Okundu ✓</button>' : '')+
+                '</div></div>';
+      }
+      $.notifList.innerHTML = html;
 
-      $.notifList.querySelectorAll(".goPhoto").forEach(btn => {
-        btn.onclick = async (e) => {
-          const pid = parseInt(e.currentTarget.dataset.id, 10);
-          const { data: p } = await supabase.from("photos").select("*").eq("id", pid).single();
-          if (p) {
-            currentFilterUserId = null;
-            await loadPhotos(null);
-            map.setView([p.lat, p.lng], 12);
-            $.notifDropdown.classList.remove('active');
-          }
+      var goBtns = $.notifList.querySelectorAll(".goPhoto");
+      for (var g=0; g<goBtns.length; g++){
+        goBtns[g].onclick = async function(e){
+          var pid = parseInt(e.currentTarget.dataset.id, 10);
+          var rp = await supabase.from("photos").select("*").eq("id", pid).single();
+          var p = rp && rp.data ? rp.data : null;
+          if (p){ currentFilterUserId = null; await loadPhotos(null); map.setView([p.lat, p.lng], 12); $.notifDropdown.classList.remove('active'); }
         };
-      });
-
-      $.notifList.querySelectorAll(".markRead").forEach(btn => {
-        btn.onclick = async (e) => {
-          const id = parseInt(e.currentTarget.dataset.id, 10);
+      }
+      var rdBtns = $.notifList.querySelectorAll(".markRead");
+      for (var r=0; r<rdBtns.length; r++){
+        rdBtns[r].onclick = async function(e){
+          var id = parseInt(e.currentTarget.dataset.id, 10);
           await supabase.from("notifications").update({ is_read: true }).eq("id", id);
           await loadNotifications(userId);
         };
-      });
+      }
     }
-
     function subscribeNotifications(userId){
-      if (notifChannel) { supabase.removeChannel(notifChannel); }
-      notifChannel = supabase.channel(`notif:${userId}`)
-        .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'notifications', filter: `recipient=eq.${userId}` }, async () => { await loadNotifications(userId); })
+      if (notifChannel) { try{ supabase.removeChannel(notifChannel);}catch(e){} }
+      notifChannel = supabase.channel('notif:'+userId)
+        .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'notifications', filter: 'recipient=eq.'+userId }, async function(){ await loadNotifications(userId); })
         .subscribe();
     }
+    $.btnReadAll.onclick = async function(){ var me = await getSessionUser(); if (!me) return; await supabase.from("notifications").update({ is_read: true }).eq("recipient", me.id).eq("is_read", false); await loadNotifications(me.id); };
+    $.btnNotif.onclick = async function(){ var me = await getSessionUser(); if (!me) return; $.notifDropdown.classList.toggle('active'); if ($.notifDropdown.classList.contains('active')) await loadNotifications(me.id); };
+    $.closeNotif.onclick = function(){ $.notifDropdown.classList.remove('active'); };
 
-    $.btnReadAll.onclick = async () => {
-      const me = await getSessionUser(); if (!me) return;
-      await supabase.from("notifications").update({ is_read: true }).eq("recipient", me.id).eq("is_read", false);
-      await loadNotifications(me.id);
-    };
-    $.btnNotif.onclick = async () => {
-      const me = await getSessionUser(); if (!me) return;
-      $.notifDropdown.classList.toggle('active');
-      if ($.notifDropdown.classList.contains('active')) await loadNotifications(me.id);
-    };
-    $.closeNotif.onclick = () => $.notifDropdown.classList.remove('active');
+    // Photos
+    var currentFilterUserId = null;
+    var pendingLatLng = null;
+    var editingPhoto = null;
+    var pendingEditLatLng = null;
 
-    // ===== Load Photos =====
-    async function loadPhotos(filterUserId = null) {
-      clearMarkers();
-      let q = supabase.from("photos").select("*").order("id", { ascending: false }).limit(500);
-      if (filterUserId) q = q.eq("user_id", filterUserId);
-      const { data: photos } = await q;
-      (photos ?? []).forEach(async (p) => {
-        const popup = await buildPopup(p);
-        const m = L.marker([p.lat, p.lng], { icon: thumbIcon(p.image_url) }).addTo(map).bindPopup(popup);
-        markers.push(m);
-      });
-    }
+    async function buildPopup(photo){
+      var me = await getSessionUser();
+      var lc = await supabase.from("likes").select("*",{count:"exact",head:true}).eq("photo_id", photo.id);
+      var likeCount = lc && typeof lc.count === 'number' ? lc.count : 0;
 
-    async function buildPopup(photo) {
-      const me = await getSessionUser();
-      const { count: likeCount } = await supabase.from("likes").select("*",{count:"exact",head:true}).eq("photo_id", photo.id);
-
-      let liked = false;
-      if (me) {
-        const { data: myLike } = await supabase.from("likes").select("id").eq("photo_id", photo.id).eq("user_id", me.id).limit(1);
-        liked = (myLike ?? []).length > 0;
+      var liked = false;
+      if (me){
+        var ml = await supabase.from("likes").select("id").eq("photo_id", photo.id).eq("user_id", me.id).limit(1);
+        liked = ml && ml.data && ml.data.length > 0;
       }
 
-      const { data: commentsRaw } = await supabase
-        .from("comments")
-        .select("id, content, created_at, user_id")
-        .eq("photo_id", photo.id)
-        .order("created_at", { ascending:false })
-        .limit(50);
+      var cr = await supabase.from("comments").select("id, content, created_at, user_id").eq("photo_id", photo.id).order("created_at", { ascending:false }).limit(50);
+      var comments = cr && cr.data ? cr.data : [];
 
-      let comments = commentsRaw || [];
-      let usernames = {};
-      if (comments.length) {
-        const userIds = [...new Set(comments.map(c => c.user_id))];
-        const { data: profs } = await supabase.from("user_profiles").select("id, username").in("id", userIds);
-        (profs||[]).forEach(p => { usernames[p.id] = p.username; });
+      var usernames = {};
+      if (comments.length){
+        var uids = []; for (var i=0;i<comments.length;i++){ if (uids.indexOf(comments[i].user_id)===-1) uids.push(comments[i].user_id); }
+        var profs = await supabase.from("user_profiles").select("id, username").in("id", uids);
+        var arr = profs && profs.data ? profs.data : [];
+        for (var j=0;j<arr.length;j++){ usernames[arr[j].id] = arr[j].username; }
       }
 
-      const wrap = document.createElement("div");
+      var wrap = document.createElement("div");
       wrap.className = "popup";
-      wrap.innerHTML = `
-        <img src="${photo.image_url}" alt="photo"/>
-        <div class="row" style="align-items:center;">
-          <div>
-            <span class="like" title="beğen">${liked ? "❤️" : "🤍"}</span>
-            <span><b>${likeCount || 0}</b> likes</span>
-          </div>
-          ${me && me.id === photo.user_id ? `<div class="dropdown" style="margin-left:auto;">
-            <span class="menu-trigger">⋯</span>
-            <div class="dropdown-menu">
-              <button class="btnEditPhoto">Konumu/etiketi düzenle</button>
-            </div>
-          </div>` : ''}
-        </div>
-        <div class="comments">${(comments || []).map(c => `
-          <div data-id="${c.id}">• <b>${escapeHtml(usernames[c.user_id]||"?")}</b>: ${escapeHtml(c.content)}
-            ${me && me.id===c.user_id ? ` <a href="#" class="editComment" data-id="${c.id}">düzenle</a>` : ''}
-          </div>`).join("")}</div>
-        <input type="text" class="commentInput" placeholder="Yorum yaz ve Enter"/>
-      `;
+      wrap.innerHTML =
+        '<img src="'+photo.image_url+'" alt="photo" loading="lazy" decoding="async"/>'+
+        '<div class="row" style="align-items:center;">'+
+          '<div>'+
+            '<span class="like" title="beğen">'+(liked ? "❤️" : "🤍")+'</span> '+
+            '<span><b>'+likeCount+'</b> likes</span>'+
+          '</div>'+
+          ((me && me.id === photo.user_id) ? 
+            ('<div class="dropdown" style="margin-left:auto;">'+
+              '<span class="menu-trigger">⋯</span>'+
+              '<div class="dropdown-menu">'+
+                '<button class="btnEditPhoto">Konumu/etiketi düzenle</button>'+
+              '</div></div>') : '')+
+        '</div>'+
+        '<div class="comments">'+
+          comments.map(function(c){
+            return '<div data-id="'+c.id+'">• <b>'+escapeHtml(usernames[c.user_id]||"?")+
+                   '</b>: '+escapeHtml(c.content)+
+                   ((me && me.id===c.user_id)?' <a href="#" class="editComment" data-id="'+c.id+'">düzenle</a>':'')+
+                   '</div>';
+          }).join("")+
+        '</div>'+
+        '<input type="text" class="commentInput" placeholder="Yorum yaz ve Enter"/>';
 
-      const trig = wrap.querySelector('.menu-trigger');
-      if (trig){
-        const menu = wrap.querySelector('.dropdown-menu');
-        trig.onclick = (e)=>{ e.stopPropagation(); menu.classList.toggle('active'); };
-      }
+      var trig = wrap.querySelector('.menu-trigger');
+      if (trig){ var menu = wrap.querySelector('.dropdown-menu'); trig.onclick = function(e){ e.stopPropagation(); menu.classList.toggle('active'); }; }
 
-      // like (+5 coin owner'a)
-      const likeBtn = wrap.querySelector(".like");
-      likeBtn.onclick = async () => {
-        const user = await getSessionUser();
+      var likeBtn = wrap.querySelector(".like");
+      likeBtn.onclick = async function(){
+        var user = await getSessionUser();
         if (!user) { alert("Önce giriş yapınız."); return; }
         if (liked) {
           await supabase.from("likes").delete().eq("photo_id", photo.id).eq("user_id", user.id);
         } else {
           await supabase.from("likes").insert({ photo_id: photo.id, user_id: user.id });
-          const { data: owner } = await supabase.from('user_profiles').select('coin').eq('id', photo.user_id).single();
-          if (owner) await supabase.from('user_profiles').update({ coin: (owner.coin||0) + 5 }).eq('id', photo.user_id);
+          var owner = await supabase.from('user_profiles').select('coin').eq('id', photo.user_id).single();
+          if (owner && owner.data) await supabase.from('user_profiles').update({ coin: (owner.data.coin||0) + 5 }).eq('id', photo.user_id);
         }
         await loadPhotos(currentFilterUserId);
       };
 
-      // add comment
-      const ci = wrap.querySelector(".commentInput");
-      ci.addEventListener("keypress", async (e) => {
+      var ci = wrap.querySelector(".commentInput");
+      ci.addEventListener("keypress", async function(e){
         if (e.key === "Enter") {
-          const user = await getSessionUser();
+          var user = await getSessionUser();
           if (!user) { alert("Önce giriş yapınız."); return; }
-          const content = ci.value.trim();
+          var content = ci.value.trim();
           if (!content) return;
-          await supabase.from("comments").insert({ photo_id: photo.id, user_id: user.id, content });
+          await supabase.from("comments").insert({ photo_id: photo.id, user_id: user.id, content: content });
           ci.value = "";
           await loadPhotos(currentFilterUserId);
         }
       });
 
-      // edit own comment
-      wrap.querySelectorAll('.editComment').forEach(a => {
-        a.onclick = async (ev) => {
+      var edits = wrap.querySelectorAll('.editComment');
+      for (var x=0;x<edits.length;x++){
+        edits[x].onclick = async function(ev){
           ev.preventDefault();
-          const id = parseInt(ev.currentTarget.dataset.id,10);
-          const txt = prompt('Yeni yorum metni:');
+          var id = parseInt(ev.currentTarget.dataset.id,10);
+          var txt = window.prompt('Yeni yorum metni:');
           if (txt && txt.trim()) { await supabase.from('comments').update({ content: txt.trim() }).eq('id', id); await loadPhotos(currentFilterUserId); }
-        };
-      });
-
-      // open edit photo modal
-      const btnEditPhoto = wrap.querySelector('.btnEditPhoto');
-      if (btnEditPhoto){
-        btnEditPhoto.onclick = () => {
-          editingPhoto = photo; pendingEditLatLng = { lat: photo.lat, lng: photo.lng };
-          $.editPhotoLoc.textContent = `Konum: ${photo.lat.toFixed(5)}, ${photo.lng.toFixed(5)}`;
-          $.editTags.value = '';
-          setEditPhotoModal(true);
         };
       }
 
+      var btnEditPhoto = wrap.querySelector('.btnEditPhoto');
+      if (btnEditPhoto){
+        btnEditPhoto.onclick = function(){
+          editingPhoto = photo; pendingEditLatLng = { lat: photo.lat, lng: photo.lng };
+          alert("Konumu güncellemek için sağ panelde Photo Settings > ilgili foto'dan 'Konum Seç' butonunu da kullanabilirsiniz.");
+        };
+      }
       return wrap;
     }
 
-    // ===== Top Users + Follow (+ coin) =====
-    async function loadTopUsers() {
-      const { data: users } = await supabase.from("user_profiles").select("id,username,coin,posts");
-      const me = await getSessionUser();
-      const list = users ? [...users] : [];
-      list.sort((a,b)=> (b.coin ?? 0) - (a.coin ?? 0));
-      const top = list.slice(0,10);
+    async function loadPhotos(filterUserId){
+      clearMarkers();
+      var q = supabase.from("photos").select("*").order("id", { ascending: false }).limit(500);
+      if (filterUserId) q = q.eq("user_id", filterUserId);
+      var r = await q;
+      var photos = r && r.data ? r.data : [];
+      for (var i=0;i<photos.length;i++){
+        var p = photos[i];
+        var popup = await buildPopup(p);
+        var m = L.marker([p.lat, p.lng], { icon: thumbIcon(p.image_url) }).addTo(map).bindPopup(popup);
+        markers.push(m);
+      }
+    }
+
+    // Top Users + avatars
+    async function loadTopUsers(){
+      var r = await supabase.from("user_profiles").select("id,username,coin,posts,avatar_url");
+      var users = r && r.data ? r.data : [];
+      var me = await getSessionUser();
+      users.sort(function(a,b){ return (b.coin||0) - (a.coin||0); });
+      var top = users.slice(0,10);
 
       $.topList.innerHTML = "";
-      for (const u of top) {
-        const li = document.createElement("li");
-        li.className = "user-item";
-        li.innerHTML = `
-          <div class="row" style="justify-content:space-between;">
-            <div><b>${u.username}</b><div class="muted">💰 ${u.coin ?? 0} • 🖼️ ${u.posts ?? 0}</div></div>
-            <div>›</div>
-          </div>
-        `;
+      for (var i=0;i<top.length;i++){
+        (async function(u){
+          var av = u.avatar_url;
+          if (!av){
+            var fp = await supabase.from("photos").select("image_url").eq("user_id", u.id).order("id", {ascending:true}).limit(1);
+            if (fp && fp.data && fp.data.length) av = fp.data[0].image_url;
+          }
+          if (!av) av = "data:image/svg+xml;utf8,"+encodeURIComponent('<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"64\" height=\"64\"><rect width=\"100%\" height=\"100%\" fill=\"#e5e7eb\"/><text x=\"50%\" y=\"50%\" dominant-baseline=\"middle\" text-anchor=\"middle\" fill=\"#9ca3af\" font-size=\"14\">?</text></svg>');
 
-        const sub = document.createElement("div");
-        sub.className = "submenu";
-        sub.innerHTML = `
-          <div class="row" style="gap:8px; align-items:center; margin-bottom:6px;">
-            <button class="btn followBtn">Follow</button>
-            <span class="muted">Followers: <b class="fcount">0</b></span>
-          </div>
-          <div class="muted">Bu kullanıcının fotoğraflarını haritada gösterir.</div>
-        `;
-        li.appendChild(sub);
+          var li = document.createElement("li");
+          li.className = "user-item";
+          li.innerHTML =
+            '<div class="row" style="justify-content:space-between;">'+
+              '<div class="user-line"><img class="avatar-sm" src="'+av+'" alt=""><div><b>'+escapeHtml(u.username)+'</b><div class="muted">💰 '+(u.coin||0)+' • 🖼️ '+(u.posts||0)+'</div></div></div>'+
+              '<div>›</div>'+
+            '</div>';
 
-        li.addEventListener("click", async (ev) => {
-          if (ev.target.classList.contains("followBtn")) return;
-          sub.classList.toggle("active");
-          currentFilterUserId = u.id;
-          await loadPhotos(currentFilterUserId);
-        });
+          var sub = document.createElement("div");
+          sub.className = "submenu";
+          sub.innerHTML =
+            '<div class="row" style="gap:8px; align-items:center; margin-bottom:6px;">'+
+              '<button class="btn followBtn">Follow</button>'+
+              '<span class="muted">Followers: <b class="fcount">0</b></span>'+
+            '</div>'+
+            '<div class="muted">Bu kullanıcının fotoğraflarını haritada gösterir.</div>';
+          li.appendChild(sub);
 
-        (async () => {
-          const { count } = await supabase.from("follows").select("*",{count:"exact",head:true}).eq("following", u.id);
-          sub.querySelector(".fcount").textContent = count ?? 0;
+          li.addEventListener("click", async function(ev){
+            if (ev.target.classList.contains("followBtn")) return;
+            sub.classList.toggle("active");
+            currentFilterUserId = u.id;
+            await loadPhotos(currentFilterUserId);
+          });
 
-          const btn = sub.querySelector(".followBtn");
-          if (me) {
-            const { data: already } = await supabase.from("follows").select("id").eq("follower", me.id).eq("following", u.id).limit(1);
-            if ((already ?? []).length > 0) btn.textContent = "Following";
+          var fc = await supabase.from("follows").select("*",{count:"exact",head:true}).eq("following", u.id);
+          var cnt = fc && typeof fc.count === 'number' ? fc.count : 0;
+          sub.querySelector(".fcount").textContent = String(cnt);
 
-            btn.onclick = async (e) => {
+          var btn = sub.querySelector(".followBtn");
+          if (me){
+            var already = await supabase.from("follows").select("id").eq("follower", me.id).eq("following", u.id).limit(1);
+            if (already && already.data && already.data.length > 0) btn.textContent = "Following";
+            btn.onclick = async function(e){
               e.stopPropagation();
-              const meNow = await getSessionUser(); if (!meNow) { alert("Önce giriş yapınız."); return; }
+              var meNow = await getSessionUser(); if (!meNow) { alert("Önce giriş yapınız."); return; }
               if (btn.textContent === "Follow") {
-                const { error } = await supabase.from("follows").insert({ follower: meNow.id, following: u.id });
-                if (!error) {
+                var ins = await supabase.from("follows").insert({ follower: meNow.id, following: u.id });
+                if (!ins.error) {
                   btn.textContent = "Following";
-                  sub.querySelector(".fcount").textContent = String((parseInt(sub.querySelector(".fcount").textContent||"0",10))+1);
+                  sub.querySelector(".fcount").textContent = String(parseInt(sub.querySelector(".fcount").textContent||"0",10)+1);
                   await updateUserPanel(meNow.id);
-                  const { data: prof } = await supabase.from('user_profiles').select('coin').eq('id', u.id).single();
-                  if (prof) await supabase.from('user_profiles').update({ coin: (prof.coin||0) + 10 }).eq('id', u.id);
+                  var prof = await supabase.from('user_profiles').select('coin').eq('id', u.id).single();
+                  if (prof && prof.data) await supabase.from('user_profiles').update({ coin: (prof.data.coin||0) + 10 }).eq('id', u.id);
                 }
               } else {
-                const { error } = await supabase.from("follows").delete().eq("follower", meNow.id).eq("following", u.id);
-                if (!error) {
+                var del = await supabase.from("follows").delete().eq("follower", meNow.id).eq("following", u.id);
+                if (!del.error) {
                   btn.textContent = "Follow";
-                  sub.querySelector(".fcount").textContent = String(Math.max(0,(parseInt(sub.querySelector(".fcount").textContent||"0",10))-1));
+                  sub.querySelector(".fcount").textContent = String(Math.max(0,(parseInt(sub.querySelector(".fcount").textContent||"0",10)-1)));
                   await updateUserPanel(meNow.id);
                 }
               }
             };
           } else {
-            btn.onclick = (e)=>{ e.stopPropagation(); alert("Follow için giriş yapın."); };
+            btn.onclick = function(e){ e.stopPropagation(); alert("Follow için giriş yapın."); };
           }
-        })();
-
-        $.topList.appendChild(li);
+          $.topList.appendChild(li);
+        })(top[i]);
       }
     }
 
-    // Kullanıcı arama
-    $.searchUser.addEventListener("input", async (e) => {
-      const term = e.target.value.trim();
+    // Sol panel kullanıcı arama
+    $.searchUser.addEventListener("input", async function(e){
+      var term = e.target.value.trim();
       if (!term) { $.searchResults.innerHTML = ""; return; }
-      const { data: users } = await supabase.from("user_profiles").select("id, username, posts").ilike("username", `%${term}%`).limit(12);
-      $.searchResults.innerHTML = (users||[]).map(u => `<li class="user-item" data-id="${u.id}"><b>${u.username}</b> <span class="muted">• ${u.posts||0} post</span></li>`).join("");
-      $.searchResults.querySelectorAll(".user-item").forEach(el => {
-        el.onclick = async () => { currentFilterUserId = el.dataset.id; await loadPhotos(currentFilterUserId); };
-      });
+      var r = await supabase.from("user_profiles").select("id, username, posts, avatar_url").ilike("username", "%"+term+"%").limit(12);
+      var users = r && r.data ? r.data : [];
+      var html = '';
+      for (var i=0;i<users.length;i++){
+        var u = users[i], av = u.avatar_url;
+        if (!av){
+          var fp = await supabase.from("photos").select("image_url").eq("user_id", u.id).order("id", {ascending:true}).limit(1);
+          if (fp && fp.data && fp.data.length) av = fp.data[0].image_url;
+        }
+        if (!av) av = "data:image/svg+xml;utf8,"+encodeURIComponent('<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"64\" height=\"64\"><rect width=\"100%\" height=\"100%\" fill=\"#e5e7eb\"/><text x=\"50%\" y=\"50%\" dominant-baseline=\"middle\" text-anchor=\"middle\" fill=\"#9ca3af\" font-size=\"14\">?</text></svg>');
+        html += '<li class="user-item" data-id="'+u.id+'"><div class="user-line"><img class="avatar-sm" src="'+av+'"><b>'+escapeHtml(u.username)+'</b> <span class="muted">• '+(u.posts||0)+' post</span></div></li>';
+      }
+      $.searchResults.innerHTML = html;
+      var items = $.searchResults.querySelectorAll(".user-item");
+      for (var k=0;k<items.length;k++){
+        items[k].onclick = async function(){ currentFilterUserId = this.dataset.id; await loadPhotos(currentFilterUserId); };
+      }
     });
-
-    // ===== Add Photo (+10 coin) =====
-    $.addPhoto.onclick = async () => {
-      const user = await getSessionUser(); if (!user) { alert("Önce giriş yapınız."); return; }
+    // Add Photo (modal)
+    $.addPhoto.onclick = async function(){
+      var user = await getSessionUser(); if (!user) { alert("Önce giriş yapınız."); return; }
       pendingLatLng = map.getCenter();
-      $.chosenLoc.textContent = `Konum: ${pendingLatLng.lat.toFixed(5)}, ${pendingLatLng.lng.toFixed(5)}`;
+      $.chosenLoc.textContent = "Konum: "+pendingLatLng.lat.toFixed(5)+", "+pendingLatLng.lng.toFixed(5);
       $.uploadErr.textContent = ""; $.fileInput.value = ""; $.previewWrap.innerHTML = ""; $.previewWrap.style.display = "none";
       setModal(true);
     };
-
-    $.pickOnMap.onclick = () => {
-      $.photoForm.classList.remove('active');
-      $.overlay.classList.remove('active');
-      $.hint.classList.add("active");
-      const onClick = (e) => {
-        pendingLatLng = e.latlng;
-        $.chosenLoc.textContent = `Konum: ${pendingLatLng.lat.toFixed(5)}, ${pendingLatLng.lng.toFixed(5)}`;
-        $.hint.classList.remove("active");
-        map.off("click", onClick);
-        setModal(true);
-      };
+    $.pickOnMap.onclick = function(){
+      $.photoForm.classList.remove('active'); $.overlay.classList.remove('active'); $.hint.classList.add("active");
+      var onClick = function(e){ pendingLatLng = e.latlng; $.chosenLoc.textContent = "Konum: "+pendingLatLng.lat.toFixed(5)+", "+pendingLatLng.lng.toFixed(5); $.hint.classList.remove("active"); map.off("click", onClick); setModal(true); };
       map.once("click", onClick);
     };
-
-    $.fileInput.onchange = (e) => {
-      const file = e.target.files?.[0];
-      if (file) {
-        $.previewWrap.style.display = "block";
-        $.previewWrap.innerHTML = "";
-        const img = document.createElement("img");
-        img.src = URL.createObjectURL(file);
-        img.style.width = "100%"; img.style.borderRadius = "12px"; img.style.marginTop = "6px";
-        $.previewWrap.appendChild(img);
-      }
-    };
-
-    $.cancelUpload.onclick = () => { setModal(false); pendingLatLng = null; };
-
-    $.confirmUpload.onclick = async () => {
-      try {
+    $.fileInput.onchange = function(){ var f = $.fileInput.files && $.fileInput.files[0]; if (f){ $.previewWrap.style.display="block"; $.previewWrap.innerHTML='<img src="'+URL.createObjectURL(f)+'" style="width:100%;border-radius:12px;margin-top:6px;" loading="lazy" decoding="async">'; } };
+    $.cancelUpload.onclick = function(){ setModal(false); pendingLatLng = null; };
+    $.confirmUpload.onclick = async function(){
+      try{
         $.uploadErr.textContent = "";
-        const user = await getSessionUser(); if (!user) { alert("Önce giriş yapınız."); return; }
+        var user = await getSessionUser(); if (!user) { alert("Önce giriş yapınız."); return; }
         if (!pendingLatLng) { pendingLatLng = map.getCenter(); }
-        const f = $.fileInput.files?.[0]; if (!f) { $.uploadErr.textContent = "Lütfen fotoğraf seçin."; return; }
-
-        const ext = f.name.split(".").pop() || "jpg";
-        const path = `${user.id}/${Date.now()}.${ext}`;
-        const { error: upErr } = await supabase.storage.from("photos").upload(path, f);
-        if (upErr) { $.uploadErr.textContent = "Yükleme hatası: " + upErr.message; return; }
-
-        const { data: pub } = supabase.storage.from("photos").getPublicUrl(path);
-        const imageUrl = pub?.publicUrl; if (!imageUrl) { $.uploadErr.textContent = "Public URL oluşturulamadı."; return; }
-
-        const { error: insErr } = await supabase.from("photos").insert({ user_id: user.id, lat: pendingLatLng.lat, lng: pendingLatLng.lng, image_url: imageUrl });
-        if (insErr) { $.uploadErr.textContent = "DB hata: " + insErr.message; return; }
-
-        const { data: prof } = await supabase.from("user_profiles").select("coin,posts").eq("id", user.id).single();
-        if (prof) {
-          await supabase.from("user_profiles").update({ coin: (prof.coin ?? 0)+10, posts: (prof.posts ?? 0)+1 }).eq("id", user.id);
-        }
-
-        setModal(false); pendingLatLng = null;
-        await updateUserPanel(user.id); await loadPhotos(currentFilterUserId); await loadTopUsers();
-        alert("Fotoğraf yüklendi!");
-      } catch (e) { $.uploadErr.textContent = "Beklenmeyen hata: " + (e?.message || e); }
+        var f = $.fileInput.files && $.fileInput.files[0]; if (!f){ $.uploadErr.textContent="Lütfen fotoğraf seçin."; return; }
+        f = await compressImageIfNeeded(f, 1920, 2);
+        var ext = (f.name.split(".").pop() || "jpg"); var path = user.id + "/" + Date.now() + "." + ext;
+        var up = await supabase.storage.from("photos").upload(path, f); if (up && up.error){ $.uploadErr.textContent="Yükleme hatası: "+up.error.message; return; }
+        var pub = supabase.storage.from("photos").getPublicUrl(path); var imageUrl = pub && pub.data ? pub.data.publicUrl : null; if (!imageUrl){ $.uploadErr.textContent="Public URL oluşturulamadı."; return; }
+        var ins = await supabase.from("photos").insert({ user_id: user.id, lat: pendingLatLng.lat, lng: pendingLatLng.lng, image_url: imageUrl }); if (ins && ins.error){ $.uploadErr.textContent="DB hata: "+ins.error.message; return; }
+        var pr = await supabase.from("user_profiles").select("coin,posts,avatar_url").eq("id", user.id).single();
+        if (pr && pr.data){ if (!pr.data.avatar_url){ await supabase.from('user_profiles').update({ avatar_url: imageUrl }).eq('id', user.id); } await supabase.from("user_profiles").update({ coin: (pr.data.coin||0)+10, posts: (pr.data.posts||0)+1 }).eq("id", user.id); }
+        setModal(false); pendingLatLng=null; await updateUserPanel(user.id); await loadPhotos(currentFilterUserId); await refreshAvatarPreview(user.id); alert("Fotoğraf yüklendi!");
+      }catch(e){ $.uploadErr.textContent="Beklenmeyen hata: "+(e&&e.message?e.message:e); }
     };
 
-    // ===== Fotoğraf Düzenleme (konum + etiket) =====
-    $.cancelEditPhoto.onclick = () => { setEditPhotoModal(false); editingPhoto=null; pendingEditLatLng=null; $.editPhotoErr.textContent=''; };
-
-    $.editPickOnMap.onclick = () => {
-      $.editPhotoModal.classList.remove('active');
-      $.overlay.classList.remove('active');
-      $.hint.classList.add("active");
-      const onClick = (e) => {
-        pendingEditLatLng = e.latlng;
-        $.editPhotoLoc.textContent = `Konum: ${pendingEditLatLng.lat.toFixed(5)}, ${pendingEditLatLng.lng.toFixed(5)}`;
-        $.hint.classList.remove("active");
-        map.off("click", onClick);
-        setEditPhotoModal(true);
-      };
-      map.once("click", onClick);
+    // Sağ panel: Profile Settings toggle
+    $.toggleProfileSettings.onclick = function(){ $.profileSettingsSection.classList.toggle('hidden'); };
+    $.togglePhotoSettings.onclick   = async function(){
+      $.photoSettingsSection.classList.toggle('hidden');
+      if (!$.photoSettingsSection.classList.contains('hidden')) { await renderPhotoSettings(); }
     };
 
-    $.saveEditPhoto.onclick = async () => {
-      $.editPhotoErr.textContent='';
-      const me = await getSessionUser(); if (!me || !editingPhoto) { $.editPhotoErr.textContent='Oturum gerekli.'; return; }
-      if (me.id !== editingPhoto.user_id) { $.editPhotoErr.textContent='Bu fotoğraf sana ait değil.'; return; }
-
-      const updates = {};
-      if (pendingEditLatLng) { updates.lat = pendingEditLatLng.lat; updates.lng = pendingEditLatLng.lng; }
-      const tags = $.editTags.value.trim();
-      if (tags) updates.tags = tags;
-
-      try {
-        const { error } = await supabase.from('photos').update(updates).eq('id', editingPhoto.id);
-        if (error) {
-          $.editPhotoErr.textContent = error.message.includes('column') ? 'Etiket için tabloya tags TEXT kolonu ekleyin.' : error.message;
-          return;
-        }
-        setEditPhotoModal(false);
-        const centerTo = pendingEditLatLng ? [pendingEditLatLng.lat, pendingEditLatLng.lng] : [editingPhoto.lat, editingPhoto.lng];
-        editingPhoto=null; pendingEditLatLng=null; $.editTags.value='';
-        await loadPhotos(currentFilterUserId);
-        map.setView(centerTo, map.getZoom());
-      } catch (err){ $.editPhotoErr.textContent = err?.message || String(err); }
-    };
-
-    // ===== Auth + Profil Düzenleme (avatar_url kolonu yoksa tolere) =====
-    $.showRegister.onclick = () => { $.loginBox.style.display = "none"; $.regBox.style.display = "block"; };
-    $.showLogin.onclick = () => { $.regBox.style.display = "none"; $.loginBox.style.display = "block"; };
-
-    $.btnRegister.onclick = async () => {
-      $.regErr.textContent = "";
-      const email = $.regEmail.value.trim(); const pass = $.regPass.value.trim();
-      if (!email || !pass) { $.regErr.textContent = "Email ve şifre gerekli."; return; }
-      const { data, error } = await supabase.auth.signUp({ email, password: pass, options: { email_confirm: false } });
-      if (error) { $.regErr.textContent = error.message; return; }
-
-      const user = data?.user;
-      if (user) {
-        const { error: iErr } = await supabase.from("user_profiles").insert({ id: user.id, username: email, coin: 0, posts: 0 });
-        if (iErr) console.warn("user_profiles insert warn:", iErr.message);
-      }
-      alert("Kayıt başarılı! Şimdi giriş yapın."); $.regBox.style.display = "none"; $.loginBox.style.display = "block";
-    };
-
-    $.btnLogin.onclick = async () => {
-      $.loginErr.textContent = "";
-      const email = $.loginEmail.value.trim(); const pass = $.loginPass.value.trim();
-      const { data, error } = await supabase.auth.signInWithPassword({ email, password: pass });
-      if (error) { $.loginErr.textContent = error.message; return; }
-      const user = data?.user;
-      if (user) {
-        const { data: p } = await supabase.from("user_profiles").select("id").eq("id", user.id).single();
-        if (!p) { await supabase.from("user_profiles").insert({ id: user.id, username: email, coin: 0, posts: 0 }); }
-      }
-      await refreshUI();
-    };
-
-    $.btnLogout.onclick = async () => { await supabase.auth.signOut(); await refreshUI(); };
-
-    $.editProfile.onclick = async () => {
-      const me = await getSessionUser(); if (!me) return;
-      const { data: prof } = await supabase.from("user_profiles").select("username").eq("id", me.id).single();
-      $.editUsername.value = prof?.username || me.email;
-      $.newPass.value = ''; $.newPass2.value=''; $.editAvatar.value=''; $.editErr.textContent='';
-      setEditModal(true);
-    };
-
-    $.cancelEdit.onclick = () => setEditModal(false);
-
-    async function safeUpdateUserProfile(updates){
-      let me = await getSessionUser();
-      let { error } = await supabase.from('user_profiles').update(updates).eq('id', me.id);
-      if (error && /avatar_url/i.test(error.message)){
-        const noAvatar = {...updates}; delete noAvatar.avatar_url;
-        const r2 = await supabase.from('user_profiles').update(noAvatar).eq('id', me.id);
-        if (r2.error) throw r2.error; else return r2;
-      } else if (error) { throw error; }
-      return { error:null };
-    }
-
-    $.saveEdit.onclick = async () => {
+    // Profile save
+    $.btnTogglePass.onclick = function(){ var d=$.newPass.disabled; $.newPass.disabled=!d; $.newPass2.disabled=!d; if(!d){ $.newPass.value=''; $.newPass2.value=''; } };
+    $.saveEdit.onclick = async function(){
       $.editErr.textContent = "";
-      const me = await getSessionUser(); if (!me) { $.editErr.textContent = "Önce giriş yapın."; return; }
+      var me = await getSessionUser(); if (!me) { $.editErr.textContent="Önce giriş yapın."; return; }
+      var newName = $.editUsername.value.trim();
+      var avatarFile = $.editAvatar.files && $.editAvatar.files[0];
+      var np1 = $.newPass.value.trim(), np2 = $.newPass2.value.trim();
+      if (np1 || np2){ if (np1.length<8){ $.editErr.textContent='Şifre en az 8 karakter olmalı.'; return; } if (np1!==np2){ $.editErr.textContent='Şifreler eşleşmiyor.'; return; } var pu=await supabase.auth.updateUser({password:np1}); if(pu&&pu.error){ $.editErr.textContent=pu.error.message; return; } }
+      var updates = {}; if (newName) updates.username = newName;
+      if (avatarFile){ var f = await compressImageIfNeeded(avatarFile, 1024, 1.5); var ext=f.name.split('.').pop()||'jpg'; var avatarPath='avatars/'+me.id+'.'+ext; var up=await supabase.storage.from('avatars').upload(avatarPath,f,{upsert:true}); if(!up||!up.error){ var pub=supabase.storage.from('avatars').getPublicUrl(avatarPath); var url=pub&&pub.data?pub.data.publicUrl:null; if(url) updates.avatar_url=url; } }
+      var upUser = await supabase.from('user_profiles').update(updates).eq('id', me.id); if (upUser && upUser.error){ if (upUser.error.message && upUser.error.message.toLowerCase().indexOf('avatar_url')>-1){ delete updates.avatar_url; var up2 = await supabase.from('user_profiles').update(updates).eq('id', me.id); if(up2&&up2.error){ $.editErr.textContent=up2.error.message; return; } } else { $.editErr.textContent=upUser.error.message; return; } }
+      await refreshUI(); alert('Profil güncellendi.');
+    };
 
-      const newName = $.editUsername.value.trim();
-      const avatarFile = $.editAvatar.files?.[0];
-      const np1 = $.newPass.value.trim();
-      const np2 = $.newPass2.value.trim();
-
-      if (np1 || np2) {
-        if (np1.length < 8) { $.editErr.textContent = 'Şifre en az 8 karakter olmalı.'; return; }
-        if (np1 !== np2) { $.editErr.textContent = 'Şifreler eşleşmiyor.'; return; }
-        const { error: pErr } = await supabase.auth.updateUser({ password: np1 });
-        if (pErr) { $.editErr.textContent = pErr.message; return; }
+    // Photo Settings (right panel içi)
+    async function renderPhotoSettings(){
+      var me = await getSessionUser(); if (!me){ $.psList.innerHTML='<div class="muted">Oturum gerekli.</div>'; return; }
+      var r = await supabase.from('photos').select('id,image_url,lat,lng').eq('user_id', me.id).order('id',{ascending:false});
+      var ph = r && r.data ? r.data : [];
+      if (!ph.length){ $.psList.innerHTML='<div class="muted">Henüz fotoğraf yok.</div>'; return; }
+      var html = '';
+      for (var i=0;i<ph.length;i++){
+        var p = ph[i];
+        html += '<div style="display:flex;gap:10px;align-items:center;border:1px solid #eee;border-radius:10px;padding:8px;margin-bottom:8px;">'+
+                '<img src="'+p.image_url+'" style="width:64px;height:64px;object-fit:cover;border-radius:8px;" loading="lazy" decoding="async"/>'+
+                '<div style="flex:1;"><div>ID: <b>'+p.id+'</b></div><div class="muted">Lat: '+p.lat.toFixed(5)+' Lng: '+p.lng.toFixed(5)+'</div></div>'+
+                '<div class="row" style="gap:6px;flex-wrap:wrap;">'+
+                  '<button class="btn ghost" data-ps-go="'+p.id+'">Göster</button>'+
+                  '<button class="btn" data-ps-pick="'+p.id+'">Konum Seç</button>'+
+                  '<button class="btn" style="border-color:#f3c;color:#c00;" data-ps-del="'+p.id+'">Sil</button>'+
+                '</div>'+
+              '</div>';
       }
+      $.psList.innerHTML = html;
 
-      let updates = {};
-      if (newName) updates.username = newName;
+      // Göster
+      $.psList.querySelectorAll('[data-ps-go]').forEach(function(b){
+        b.onclick = async function(){ var id=parseInt(b.getAttribute('data-ps-go'),10); var p=await supabase.from('photos').select('*').eq('id',id).single(); if (p&&p.data){ currentFilterUserId=null; await loadPhotos(null); map.setView([p.data.lat,p.data.lng], 13); } };
+      });
+      // Konum seç (map click)
+      $.psList.querySelectorAll('[data-ps-pick]').forEach(function(b){
+        b.onclick = async function(){
+          var id = parseInt(b.getAttribute('data-ps-pick'),10);
+          var pr = await supabase.from('photos').select('*').eq('id',id).single(); var p = pr&&pr.data?pr.data:null; if(!p) return;
+          $.hint.classList.add("active");
+          var onClick = async function(e){
+            $.hint.classList.remove("active"); map.off("click", onClick);
+            var updates = { lat: e.latlng.lat, lng: e.latlng.lng };
+            var up = await supabase.from('photos').update(updates).eq('id', id);
+            if (!up.error){ await loadPhotos(currentFilterUserId); await renderPhotoSettings(); map.setView([updates.lat,updates.lng], 14); }
+          };
+          map.once("click", onClick);
+        };
+      });
+      // Sil
+      $.psList.querySelectorAll('[data-ps-del]').forEach(function(b){
+        b.onclick = async function(){
+          var id=parseInt(b.getAttribute('data-ps-del'),10);
+          if (!confirm('Fotoğraf silinsin mi?')) return;
+          await supabase.from('photos').delete().eq('id', id);
+          var me2 = await getSessionUser();
+          var prof = await supabase.from('user_profiles').select('posts').eq('id', me2.id).single();
+          if (prof && prof.data) await supabase.from('user_profiles').update({ posts: Math.max(0,(prof.data.posts||0)-1) }).eq('id', me2.id);
+          await loadPhotos(currentFilterUserId);
+          await renderPhotoSettings();
+        };
+      });
+    }
 
-      if (avatarFile) {
-        const ext = avatarFile.name.split('.').pop() || 'jpg';
-        const avatarPath = `avatars/${me.id}.${ext}`;
-        let uploaded = false;
-        let publicUrl = null;
-        try {
-          const { error: upErr } = await supabase.storage.from('avatars').upload(avatarPath, avatarFile, { upsert: true });
-          if (!upErr) { const { data: pub } = await supabase.storage.from('avatars').getPublicUrl(avatarPath); publicUrl = pub?.publicUrl; uploaded = true; }
-        } catch(_) {}
-        if (!uploaded){
-          const fallbackPath = `avatars/${me.id}.${ext}`;
-          const { error: upErr2 } = await supabase.storage.from('photos').upload(fallbackPath, avatarFile, { upsert: true });
-          if (!upErr2) { const { data: pub2 } = await supabase.storage.from('photos').getPublicUrl(fallbackPath); publicUrl = pub2?.publicUrl; uploaded = true; }
-        }
-        if (uploaded) updates.avatar_url = publicUrl; else $.editErr.textContent = 'Avatar yüklenemedi. Storage bucket/policy kontrol edin.';
-      }
-
-      try { await safeUpdateUserProfile(updates); }
-      catch(e){ $.editErr.textContent = e.message || String(e); return; }
-
-      setEditModal(false);
+    // Auth (login/register/logout)
+    $.showRegister.onclick = function(){ $.loginBox.style.display="none"; $.regBox.style.display="block"; };
+    $.showLogin.onclick = function(){ $.regBox.style.display="none"; $.loginBox.style.display="block"; };
+    $.btnRegister.onclick = async function(){
+      $.regErr.textContent=""; var email=$.regEmail.value.trim(), pass=$.regPass.value.trim(); if(!email||!pass){ $.regErr.textContent="Email ve şifre gerekli."; return; }
+      var r = await supabase.auth.signUp({ email:email, password:pass, options:{ email_confirm:false } }); if(r&&r.error){ $.regErr.textContent=r.error.message; return; }
+      var user = r&&r.data?r.data.user:null; if(user){ var i=await supabase.from("user_profiles").insert({ id:user.id, username:email, coin:0, posts:0 }); if(i&&i.error) console.warn(i.error.message); }
+      alert("Kayıt başarılı! Şimdi giriş yapın."); $.regBox.style.display="none"; $.loginBox.style.display="block";
+    };
+    $.btnLogin.onclick = async function(){
+      $.loginErr.textContent=""; var email=$.loginEmail.value.trim(), pass=$.loginPass.value.trim();
+      var r = await supabase.auth.signInWithPassword({ email:email, password:pass }); if(r&&r.error){ $.loginErr.textContent=r.error.message; return; }
+      var user = r&&r.data?r.data.user:null; if(user){ var p=await supabase.from("user_profiles").select("id").eq("id",user.id).single(); if(!p||p.error){ await supabase.from("user_profiles").insert({ id:user.id, username:email, coin:0, posts:0 }); } }
       await refreshUI();
     };
+    $.btnLogout.onclick = async function(){ await supabase.auth.signOut(); await refreshUI(); };
 
-    // feature buttons (placeholder)
-    document.querySelectorAll('.feat').forEach(b=> b.onclick = ()=> alert(`${b.textContent} yakında!`));
-
-    // ===== Nav + Mobile =====
-    const sidebarEl = document.querySelector('.sidebar');
-    const rightEl = document.querySelector('.right');
-    document.querySelector('#menuToggle').onclick = () => {
-      if (sidebarEl.classList.contains('active') || rightEl.classList.contains('active')) {
-        sidebarEl.classList.remove('active'); rightEl.classList.remove('active');
-      } else { sidebarEl.classList.add('active'); }
+    // Map search (Nominatim)
+    async function nominatimSearch(q){
+      var url = "https://nominatim.openstreetmap.org/search?format=json&q="+encodeURIComponent(q)+"&limit=8";
+      var res = await fetch(url, { headers: { "Accept":"application/json" } });
+      if (!res.ok) return [];
+      return await res.json();
+    }
+    $.mapSearchBtn.onclick = async function(){
+      var q = $.mapSearchInput.value.trim(); if (!q) return;
+      var data = await nominatimSearch(q);
+      if (!data || !data.length){ $.mapSearchResults.innerHTML='<div>Sonuç bulunamadı</div>'; $.mapSearchResults.classList.add('active'); return; }
+      $.mapSearchResults.innerHTML = data.map(function(it){ return '<div data-lat="'+it.lat+'" data-lon="'+it.lon+'">'+escapeHtml(it.display_name)+'</div>'; }).join('');
+      $.mapSearchResults.classList.add('active');
+      $.mapSearchResults.querySelectorAll('div').forEach(function(el){
+        el.onclick = function(){
+          var lat=parseFloat(el.getAttribute('data-lat')), lon=parseFloat(el.getAttribute('data-lon'));
+          $.mapSearchResults.classList.remove('active');
+          map.setView([lat,lon], 14);
+          L.marker([lat,lon]).addTo(map);
+        };
+      });
     };
+    $.mapSearchInput.addEventListener('keydown', function(e){ if (e.key==='Enter'){ $.mapSearchBtn.click(); } });
+    document.addEventListener('click', function(e){ if (!e.target.closest || !e.target.closest('.map-search')) $.mapSearchResults.classList.remove('active'); });
 
-    $.homeBtn.onclick = async () => { currentFilterUserId = null; await loadPhotos(null); };
-    $.refreshBtn.onclick = async () => { await refreshUI(); };
+    // Mobile nav toggle
+    var sidebarEl = document.querySelector('.sidebar'); var rightEl = document.querySelector('.right');
+    document.querySelector('#menuToggle').onclick = function(){ if (sidebarEl.classList.contains('active') || rightEl.classList.contains('active')){ sidebarEl.classList.remove('active'); rightEl.classList.remove('active'); } else { sidebarEl.classList.add('active'); } };
+    $.homeBtn.onclick = async function(){ currentFilterUserId = null; await loadPhotos(null); };
+    $.refreshBtn.onclick = async function(){ await refreshUI(); };
 
-    // ===== İlk yükleme =====
+    // Init
     refreshUI();
-  </script>
 
-  <!-- =========================
-       Service Worker register
-  ========================== -->
-  <script>
-    if ("serviceWorker" in navigator) {
-      navigator.serviceWorker.register("service-worker.js")
-        .then(() => console.log("Service Worker kayıt oldu"));
+    // Service Worker sadece http/https
+    if ((location.protocol==="http:" || location.protocol==="https:") && "serviceWorker" in navigator){
+      navigator.serviceWorker.register("service-worker.js").catch(function(){});
     }
-  </script>
 
-  <!-- =========================
-       PWA Install Prompt
-       (Android destekli, iOS için ipucu)
-  ========================== -->
-  <div id="installBanner" class="row">
-    <button id="btnInstall" class="btn primary">📱 Ana Ekrana Ekle</button>
-  </div>
-  <script>
-    let deferredPrompt = null;
-    const banner = document.getElementById('installBanner');
-    const btnInstall = document.getElementById('btnInstall');
-
-    window.addEventListener("beforeinstallprompt", (e) => {
-      e.preventDefault();
-      deferredPrompt = e;
-      banner.style.display = "block";
-    });
-
-    btnInstall.addEventListener("click", async () => {
-      if (!deferredPrompt) return;
-      banner.style.display = "none";
-      deferredPrompt.prompt();
-      const { outcome } = await deferredPrompt.userChoice;
-      console.log("Install choice:", outcome);
-      deferredPrompt = null;
-    });
-
-    // iOS (Safari) için ipucu: beforeinstallprompt yok
-    const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
-    const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
-    if (isIOS && !isStandalone) {
-      const tip = document.createElement('div');
-      tip.style.position = 'fixed';
-      tip.style.left = '50%'; tip.style.transform = 'translateX(-50%)';
-      tip.style.bottom = '20px'; tip.style.zIndex = '3500';
-      tip.style.background = '#111'; tip.style.color = '#fff'; tip.style.padding = '8px 12px'; tip.style.borderRadius = '999px';
-      tip.textContent = '➕ Paylaş › Ana Ekrana Ekle ile yükleyin';
-      document.body.appendChild(tip);
-      setTimeout(()=> tip.remove(), 8000);
-    }
+    // PWA Install Prompt (banner)
+    (function(){
+      var banner = document.createElement('div'); banner.id='installBanner'; banner.className='row'; banner.style.display='none';
+      banner.innerHTML = '<button id="btnInstall" class="btn primary">📱 Ana Ekrana Ekle</button>'; document.body.appendChild(banner);
+      var deferredPrompt=null;
+      window.addEventListener("beforeinstallprompt", function(e){ e.preventDefault(); deferredPrompt=e; banner.style.display="block"; });
+      document.addEventListener('click', function(e){ if(e.target && e.target.id==='btnInstall' && deferredPrompt){ banner.style.display='none'; deferredPrompt.prompt(); deferredPrompt.userChoice.then(function(){ deferredPrompt=null; }); } });
+      var isIOS=/iphone|ipad|ipod/i.test(navigator.userAgent); var isStandalone=(window.matchMedia&&window.matchMedia('(display-mode: standalone)').matches)||window.navigator.standalone;
+      if (isIOS && !isStandalone){ var tip=document.createElement('div'); tip.style.position='fixed'; tip.style.left='50%'; tip.style.transform='translateX(-50%)'; tip.style.bottom='20px'; tip.style.zIndex='3500'; tip.style.background='#111'; tip.style.color='#fff'; tip.style.padding='8px 12px'; tip.style.borderRadius='999px'; tip.textContent='➕ Paylaş › Ana Ekrana Ekle'; document.body.appendChild(tip); setTimeout(function(){ try{ tip.remove(); }catch(e){} }, 8000); }
+    })();
   </script>
 </body>
 </html>
