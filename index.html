@@ -2,8 +2,16 @@
 <html lang="tr">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no"/>
   <title>ChronoVerse</title>
+
+  <!-- PWA -->
+  <meta name="theme-color" content="#2a7aee">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <link rel="manifest" href="manifest.json">
+  <link rel="apple-touch-icon" href="icon.png"/>
 
   <!-- Leaflet -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
@@ -13,13 +21,28 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.7/dist/umd/supabase.min.js"></script>
 
   <style>
+    :root{
+      --panelW: 25vw;
+      --panelMin: 240px;
+      --panelMax: 360px;
+      --panelBg: rgba(255,255,255,.82);
+      --panelBlur: 6px;
+    }
     * { box-sizing: border-box; }
-    html,body { height:100%; margin:0; font-family: Inter, Arial, sans-serif; }
+    html,body { height:100%; margin:0; font-family: Inter, Arial, sans-serif; background:#fff; }
     .app { display:flex; height:100vh; width:100vw; }
-    .sidebar, .right { width:320px; min-width:260px; max-width:380px; background:#fff; border-right:1px solid #e5e5e5; padding:14px; overflow:auto; }
+
+    .sidebar, .right {
+      width: var(--panelW); min-width: var(--panelMin); max-width: var(--panelMax);
+      background: var(--panelBg); backdrop-filter: blur(var(--panelBlur));
+      border-right:1px solid #e5e5e5; padding:14px; overflow:auto;
+      transition: background .2s ease;
+    }
+    .sidebar:hover, .right:hover { background: rgba(255,255,255,.9); }
     .right { border-right:none; border-left:1px solid #e5e5e5; }
     .mapwrap { flex:1; position:relative; display:flex; flex-direction:column; }
     #map { flex:1; }
+
     .row { display:flex; align-items:center; gap:8px; }
     .btn { padding:8px 10px; border:1px solid #d8dbe2; border-radius:10px; cursor:pointer; background:#f7f8fc; }
     .btn.primary { background:#2a7aee; border-color:#2a7aee; color:#fff; }
@@ -33,10 +56,12 @@
     .submenu.active { display:block; }
     .muted { color:#666; font-size:13px; }
     .kpi { margin:4px 0; }
+    .badge { display:inline-flex; align-items:center; justify-content:center; min-width:20px; height:20px; border-radius:999px; background:#e11d48; color:#fff; font-size:12px; padding:0 6px; }
 
     .photo-form, .overlay {
       position:absolute; left:50%; top:50%; transform:translate(-50%,-50%);
-      background:#fff; border-radius:14px; box-shadow:0 14px 36px rgba(0,0,0,.18); padding:16px; width:360px; z-index:1001; display:none;
+      background:#fff; border-radius:14px; box-shadow:0 14px 36px rgba(0,0,0,.18);
+      padding:16px; width:360px; z-index:1001; display:none;
     }
     .photo-form h3 { margin:0 0 8px 0; }
     .photo-form.active { display:block; }
@@ -69,43 +94,33 @@
     .notifDropdown.active { display:block; }
     .notifItem { padding:10px 12px; border-bottom:1px solid #f1f1f1; }
     .notifItem:last-child { border-bottom:0; }
-    .notifHeader { display:flex; justify-content:space-between; align-items:center; padding:8px 12px; border-bottom:1px solid #eee; background:#fafbff; border-top-left-radius:14px; border-top-right-radius:14px; }
 
     /* Liste Modal */
-    .list-modal { position:absolute; left:50%; top:50%; transform:translate(-50%,-50%); width:380px; max-height:60vh; overflow:auto; z-index:1002; background:#fff; border-radius:14px; box-shadow:0 14px 36px rgba(0,0,0,.18); padding:14px; display:none; }
+    .list-modal { position:absolute; left:50%; top:50%; transform:translate(-50%,-50%); width:420px; max-height:65vh; overflow:auto; z-index:1002; background:#fff; border-radius:14px; box-shadow:0 14px 36px rgba(0,0,0,.18); padding:14px; display:none; }
     .list-modal.active { display:block; }
 
-    /* Feature buttons under profile */
+    /* Profil altı feature butonları */
     .featureBtns { display:grid; grid-template-columns: 1fr 1fr; gap:8px; margin-top:10px; }
 
     /* Mobil uyumluluk */
     #menuToggle {
-      display: none;
-      position: absolute;
-      top: 10px;
-      left: 10px;
-      z-index: 3000;
-      background: #fff;
-      padding: 8px 10px;
-      border-radius: 12px;
-      cursor: pointer;
-      box-shadow: 0 2px 6px rgba(0,0,0,.2);
+      display:none; position:absolute; top:10px; left:10px; z-index:3000; background:#fff; padding:8px 10px;
+      border-radius:12px; cursor:pointer; box-shadow:0 2px 6px rgba(0,0,0,.2);
+    }
+    @media (max-width:1024px){ :root{ --panelW: 28vw; } }
+    @media (max-width:900px){ :root{ --panelW: 32vw; --panelMax: 320px; } }
+    @media (max-width:768px) {
+      #menuToggle { display:block; }
+      .sidebar, .right {
+        position:absolute; top:0; bottom:0; width:88%; z-index:2000;
+        transform:translateX(-100%); transition:transform .28s ease-in-out; background:#fff; /* mobilde opak */
+      }
+      .sidebar.active { transform:translateX(0); }
+      .right.active { transform:translateX(0); right:0; left:auto; }
     }
 
-    @media (max-width: 768px) {
-      #menuToggle { display: block; }
-      .sidebar, .right {
-        position: absolute;
-        top: 0; bottom: 0;
-        width: 82%;
-        z-index: 2000;
-        transform: translateX(-100%);
-        transition: transform 0.28s ease-in-out;
-        background: #fff;
-      }
-      .sidebar.active { transform: translateX(0); }
-      .right.active { transform: translateX(0); right: 0; left: auto; }
-    }
+    /* Install banner (Android) */
+    #installBanner { position:fixed; left:50%; transform:translateX(-50%); bottom:20px; z-index:3500; display:none; }
   </style>
 </head>
 <body>
@@ -121,11 +136,8 @@
           <button id="refreshBtn" class="btn ghost" title="Yenile">⟳</button>
         </div>
       </div>
-
-      <!-- Kullanıcı Arama (2.2) -->
       <input id="searchUser" type="text" placeholder="Kullanıcı ara..." style="width:100%; margin-bottom:10px;"/>
       <ul id="searchResults"></ul>
-
       <ul id="topList"></ul>
       <p class="muted" style="margin-top:10px;">Bir kullanıcıya tıklayın → <b>yalnızca o kişinin fotoğrafları</b> haritada görünsün. Alt menüden <b>Follow</b> / <b>Unfollow</b>.</p>
     </aside>
@@ -137,7 +149,7 @@
 
       <div id="overlay" class="overlay"></div>
 
-      <!-- Fotoğraf Yükleme Modalı (1.5) -->
+      <!-- Fotoğraf Yükleme Modalı -->
       <div id="photoForm" class="photo-form">
         <h3>Fotoğraf Ekle</h3>
         <div id="chosenLoc" class="muted">Konum: –</div>
@@ -145,7 +157,7 @@
           <button id="pickOnMap" class="btn ghost">Haritadan seç</button>
           <small class="muted">Seçmezsen harita merkezi kullanılır</small>
         </div>
-        <input type="file" id="fileInput" accept="image/*"/>
+        <input type="file" id="fileInput" accept="image/*" />
         <div id="previewWrap" style="display:none; margin-top:6px;"></div>
         <div class="row" style="justify-content:flex-end; gap:8px; margin-top:8px;">
           <button id="cancelUpload" class="btn">İptal</button>
@@ -170,7 +182,16 @@
         <div id="editPhotoErr" class="error"></div>
       </div>
 
-      <!-- Liste Modalları (2.3) -->
+      <!-- Photo Settings Modal -->
+      <div id="photoSettingsModal" class="list-modal">
+        <h3 style="margin-top:0;">Photo Settings</h3>
+        <div id="photoSettingsList"></div>
+        <div class="row" style="justify-content:flex-end; margin-top:10px;">
+          <button id="closePhotoSettings" class="btn">Kapat</button>
+        </div>
+      </div>
+
+      <!-- Liste Modal (followers/following vs. için hazır) -->
       <div id="listModal" class="list-modal">
         <h3 id="listTitle" style="margin-top:0;">Liste</h3>
         <ul id="listContent"></ul>
@@ -186,15 +207,16 @@
 
       <!-- Bildirimler -->
       <div class="notifWrap">
-        <div class="notifHeader">
-          <div class="row" style="gap:8px; align-items:center;">
-            <button id="btnNotif" class="btn ghost">🔔 Bildirimler</button>
-            <span id="notifBadge" class="badge" style="display:none;">0</span>
-          </div>
+        <div class="row" style="gap:8px; align-items:center;">
+          <button id="btnNotif" class="btn ghost">🔔 Bildirimler</button>
+          <span id="notifBadge" class="badge" style="display:none;">0</span>
           <button id="btnReadAll" class="btn" title="Tümünü okundu yap">Okundu ✓</button>
         </div>
         <div id="notifDropdown" class="notifDropdown">
-          <div class="notifHeader"><b>Bildirimler</b><button id="closeNotif" class="btn">Kapat</button></div>
+          <div class="row" style="justify-content:space-between; align-items:center; padding:8px 12px; border-bottom:1px solid #eee; background:#fafbff;">
+            <b>Bildirimler</b>
+            <button id="closeNotif" class="btn">Kapat</button>
+          </div>
           <div id="notifList"></div>
         </div>
       </div>
@@ -233,11 +255,39 @@
         <div class="kpi">Posts: <b id="mePosts">0</b></div>
         <div class="kpi">Followers: <b id="meFollowers" style="cursor:pointer; color:#2a7aee;">0</b></div>
         <div class="kpi">Following: <b id="meFollowing" style="cursor:pointer; color:#2a7aee;">0</b></div>
-        <div class="row" style="justify-content:space-between; align-items:center;">
-          <button id="editProfile" class="btn">Profili Düzenle</button>
-          <button id="btnLogout" class="btn">Çıkış</button>
+
+        <div style="margin:10px 0; border:1px dashed #e0e0e0; border-radius:12px; padding:12px;">
+          <!-- Profili Düzenle (yeniden tasarım) -->
+          <div class="row" style="justify-content:space-between; align-items:center;">
+            <h3 style="margin:0;">Profili Düzenle</h3>
+            <button id="openPhotoSettings" class="btn">Photo Settings</button>
+          </div>
+          <div style="margin-top:10px;">
+            <!-- Avatar seçimi -->
+            <div class="row" style="align-items:center; gap:12px; margin-bottom:10px;">
+              <img id="avatarPreview" src="" alt="avatar" style="width:56px; height:56px; border-radius:50%; object-fit:cover; background:#eee;"/>
+              <input id="editAvatar" type="file" accept="image/*"/>
+            </div>
+            <!-- Kullanıcı adı -->
+            <input id="editUsername" type="text" placeholder="Kullanıcı adı"/>
+
+            <!-- Şifre değiştir -->
+            <div style="margin-top:8px;">
+              <button id="btnTogglePass" class="btn">Şifre Değiştir</button>
+              <div id="passWrap" class="row" style="gap:8px; margin-top:6px;">
+                <input id="newPass" type="password" placeholder="Yeni şifre" disabled/>
+                <input id="newPass2" type="password" placeholder="Yeni şifre tekrar" disabled/>
+              </div>
+            </div>
+
+            <div class="row" style="justify-content:flex-end; gap:8px; margin-top:10px;">
+              <button id="saveEdit" class="btn primary">Kaydet</button>
+            </div>
+            <div id="editErr" class="error"></div>
+          </div>
         </div>
-        <!-- Yeni feature butonları -->
+
+        <!-- İstenilen feature butonları -->
         <div class="featureBtns">
           <button class="btn ghost feat" data-key="vrtour">VR Tour</button>
           <button class="btn ghost feat" data-key="challenges">Challenges</button>
@@ -246,47 +296,41 @@
           <button class="btn ghost feat" data-key="nav">Navigation</button>
           <button class="btn ghost feat" data-key="timeline">TimeLine</button>
         </div>
-      </div>
 
-      <!-- PROFİL DÜZENLE (2.1 + şifre değiştirme) -->
-      <div id="editProfileModal" class="photo-form">
-        <h3>Profili Düzenle</h3>
-        <input id="editUsername" type="text" placeholder="Yeni kullanıcı adı"/>
-        <input id="editAvatar" type="file" accept="image/*"/>
-        <div class="row" style="gap:8px;">
-          <input id="newPass" type="password" placeholder="Yeni şifre (opsiyonel)"/>
-          <input id="newPass2" type="password" placeholder="Yeni şifre tekrar"/>
+        <div class="row" style="justify-content:flex-end; margin-top:10px;">
+          <button id="btnLogout" class="btn">Çıkış</button>
         </div>
-        <div class="row" style="justify-content:flex-end; gap:8px;">
-          <button id="cancelEdit" class="btn">İptal</button>
-          <button id="saveEdit" class="btn primary">Kaydet</button>
-        </div>
-        <div id="editErr" class="error"></div>
       </div>
     </aside>
   </div>
 
+  <!-- =========================
+       Supabase Client
+  ========================== -->
   <script>
-    // =========================
-    //  Supabase Client (orijinal değerleri koru)
-    // =========================
-    const supabaseUrl = "https://bzewcgcwtdqnorlclcyd.supabase.co";   // ← KENDİ URL'İN
-    const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ6ZXdjZ2N3dGRxbm9ybGNsY3lkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTY4MTE2ODgsImV4cCI6MjA3MjM4NzY4OH0.s8GnQGeyhoXL-R2acBtdPmI3RAYLxk-CwvyW001hY6w";                  // ← KENDİ ANON KEY'İN
-    const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
+    const supabaseUrl = "https://bzewcgcwtdqnorlclcyd.supabase.co";
+    const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ6ZXdjZ2N3dGRxbm9ybGNsY3lkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTY4MTE2ODgsImV4cCI6MjA3MjM4NzY4OH0.s8GnQGeyhoXL-R2acBtdPmI3RAYLxk-CwvyW001hY6w";
+    const supabase = window.supabase.createClient(supabaseUrl, supabaseKey, {
+      auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true }
+    });
+  </script>
 
-    // =========================
-    //  Map
-    // =========================
-    const map = L.map("map").setView([39, 35], 6);
+  <!-- =========================
+       App JS
+  ========================== -->
+  <script>
+    // --------- Map ----------
+    const map = L.map("map", { tapTolerance: 15 }).setView([39, 35], 6);
     L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", { attribution: "&copy; OpenStreetMap" }).addTo(map);
 
     const markers = [];
     let pendingLatLng = null;
     let currentFilterUserId = null;
 
-    // Photo edit state
     let editingPhoto = null;
     let pendingEditLatLng = null;
+
+    const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
 
     const qs = (sel) => document.querySelector(sel);
     const $ = {
@@ -313,42 +357,45 @@
       meEmail: qs("#meEmail"), meCoin: qs("#meCoin"), mePosts: qs("#mePosts"),
       meFollowers: qs("#meFollowers"), meFollowing: qs("#meFollowing"),
       btnLogout: qs("#btnLogout"),
-      editProfile: qs("#editProfile"), editProfileModal: qs("#editProfileModal"),
+      // profile edit (inline new)
       editUsername: qs("#editUsername"), editAvatar: qs("#editAvatar"),
+      avatarPreview: qs("#avatarPreview"),
+      btnTogglePass: qs("#btnTogglePass"), passWrap: qs("#passWrap"),
       newPass: qs("#newPass"), newPass2: qs("#newPass2"),
-      cancelEdit: qs("#cancelEdit"), saveEdit: qs("#saveEdit"), editErr: qs("#editErr"),
+      saveEdit: qs("#saveEdit"), editErr: qs("#editErr"),
+      openPhotoSettings: qs("#openPhotoSettings"),
       // notifications
       notifDropdown: qs("#notifDropdown"),
       notifList: qs("#notifList"), notifBadge: qs("#notifBadge"),
       btnNotif: qs("#btnNotif"), btnReadAll: qs("#btnReadAll"), closeNotif: qs("#closeNotif"),
-      // list modal
+      // photo settings modal
+      photoSettingsModal: qs("#photoSettingsModal"),
+      photoSettingsList: qs("#photoSettingsList"),
+      closePhotoSettings: qs("#closePhotoSettings"),
+      // list modal (not used now)
       listModal: qs("#listModal"), listTitle: qs("#listTitle"), listContent: qs("#listContent"), closeList: qs("#closeList"),
     };
 
     function setModal(open) { $.overlay.classList.toggle("active", open); $.photoForm.classList.toggle("active", open); }
-    function setEditModal(open) { $.overlay.classList.toggle("active", open); $.editProfileModal.classList.toggle("active", open); }
-    function setListModal(open) { $.overlay.classList.toggle("active", open); $.listModal.classList.toggle("active", open); }
     function setEditPhotoModal(open) { $.overlay.classList.toggle("active", open); $.editPhotoModal.classList.toggle("active", open); }
+    function setPhotoSettingsModal(open) { $.overlay.classList.toggle("active", open); $.photoSettingsModal.classList.toggle("active", open); }
     function clearMarkers() { markers.splice(0).forEach(m => map.removeLayer(m)); }
     function escapeHtml(str){ return (str || "").replace(/[&<>"']/g, m => ({ "&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#039;" }[m])); }
 
     function thumbIcon(url){
       return L.divIcon({
         className: '',
-        html: `<div class="thumb-marker"><img src="${url}" alt=""/></div>`,
+        html: `<div class="thumb-marker"><img src="${url}" alt="" loading="lazy" decoding="async"/></div>`,
         iconSize: [42,42], iconAnchor:[21,21], popupAnchor:[0,-18]
       });
     }
 
-    // close dropdowns on outside click
     document.addEventListener('click', (e)=>{
       document.querySelectorAll('.dropdown-menu').forEach(m=> m.classList.remove('active'));
       if (!e.target.closest('.notifWrap')) $.notifDropdown.classList.remove('active');
     });
 
-    // =========================
-    //  Auth & Session
-    // =========================
+    // ===== Auth & Session =====
     let notifChannel = null;
 
     async function getSessionUser() {
@@ -377,6 +424,8 @@
       await loadTopUsers();
       await loadNotifications(user.id);
       subscribeNotifications(user.id);
+      // avatar preview
+      await refreshAvatarPreview(user.id);
     }
 
     supabase.auth.onAuthStateChange((_event, _session) => { refreshUI(); });
@@ -390,9 +439,18 @@
       $.meFollowing.textContent = following ?? 0;
     }
 
-    // =========================
-    //  Notifications (dropdown + actor adı)
-    // =========================
+    async function refreshAvatarPreview(userId){
+      let url = null;
+      const { data: prof } = await supabase.from("user_profiles").select("avatar_url").eq("id", userId).single();
+      if (prof?.avatar_url) url = prof.avatar_url;
+      if (!url){
+        const { data: firstPhoto } = await supabase.from("photos").select("image_url").eq("user_id", userId).order("id", { ascending: true }).limit(1).maybeSingle();
+        if (firstPhoto?.image_url) url = firstPhoto.image_url;
+      }
+      $.avatarPreview.src = url || "";
+    }
+
+    // ===== Notifications =====
     function typeLabel(t){ return t === 'like' ? '❤️ Beğeni' : t === 'comment' ? '💬 Yorum' : '➕ Takip'; }
     function fmtTime(iso){ try{ return new Date(iso).toLocaleString(); }catch{ return ""; } }
 
@@ -466,7 +524,6 @@
       await supabase.from("notifications").update({ is_read: true }).eq("recipient", me.id).eq("is_read", false);
       await loadNotifications(me.id);
     };
-
     $.btnNotif.onclick = async () => {
       const me = await getSessionUser(); if (!me) return;
       $.notifDropdown.classList.toggle('active');
@@ -474,9 +531,7 @@
     };
     $.closeNotif.onclick = () => $.notifDropdown.classList.remove('active');
 
-    // =========================
-    //  Load Photos + Popups + Thumbnail markers
-    // =========================
+    // ===== Load Photos =====
     async function loadPhotos(filterUserId = null) {
       clearMarkers();
       let q = supabase.from("photos").select("*").order("id", { ascending: false }).limit(500);
@@ -517,7 +572,7 @@
       const wrap = document.createElement("div");
       wrap.className = "popup";
       wrap.innerHTML = `
-        <img src="${photo.image_url}" alt="photo"/>
+        <img src="${photo.image_url}" alt="photo" loading="lazy" decoding="async"/>
         <div class="row" style="align-items:center;">
           <div>
             <span class="like" title="beğen">${liked ? "❤️" : "🤍"}</span>
@@ -543,6 +598,7 @@
         trig.onclick = (e)=>{ e.stopPropagation(); menu.classList.toggle('active'); };
       }
 
+      // like (+5 coin owner'a)
       const likeBtn = wrap.querySelector(".like");
       likeBtn.onclick = async () => {
         const user = await getSessionUser();
@@ -557,6 +613,7 @@
         await loadPhotos(currentFilterUserId);
       };
 
+      // add comment
       const ci = wrap.querySelector(".commentInput");
       ci.addEventListener("keypress", async (e) => {
         if (e.key === "Enter") {
@@ -570,6 +627,7 @@
         }
       });
 
+      // edit own comment
       wrap.querySelectorAll('.editComment').forEach(a => {
         a.onclick = async (ev) => {
           ev.preventDefault();
@@ -579,6 +637,7 @@
         };
       });
 
+      // open edit photo modal
       const btnEditPhoto = wrap.querySelector('.btnEditPhoto');
       if (btnEditPhoto){
         btnEditPhoto.onclick = () => {
@@ -592,9 +651,7 @@
       return wrap;
     }
 
-    // =========================
-    //  Top Users + Follow (+ coin 10)
-    // =========================
+    // ===== Top Users + Follow (+ coin) =====
     async function loadTopUsers() {
       const { data: users } = await supabase.from("user_profiles").select("id,username,coin,posts");
       const me = await getSessionUser();
@@ -670,7 +727,7 @@
       }
     }
 
-    // Kullanıcı arama (2.2)
+    // Kullanıcı arama
     $.searchUser.addEventListener("input", async (e) => {
       const term = e.target.value.trim();
       if (!term) { $.searchResults.innerHTML = ""; return; }
@@ -681,9 +738,7 @@
       });
     });
 
-    // =========================
-    //  Add Photo Flow (1.5) + coin 10
-    // =========================
+    // ===== Add Photo (+10 coin) with iOS-friendly compression =====
     $.addPhoto.onclick = async () => {
       const user = await getSessionUser(); if (!user) { alert("Önce giriş yapınız."); return; }
       pendingLatLng = map.getCenter();
@@ -692,7 +747,6 @@
       setModal(true);
     };
 
-    // Haritadan seç — modal kapat, seçince geri aç
     $.pickOnMap.onclick = () => {
       $.photoForm.classList.remove('active');
       $.overlay.classList.remove('active');
@@ -707,7 +761,7 @@
       map.once("click", onClick);
     };
 
-    // Dosya önizleme
+    // iOS-friendly preview + compression
     $.fileInput.onchange = (e) => {
       const file = e.target.files?.[0];
       if (file) {
@@ -715,6 +769,7 @@
         $.previewWrap.innerHTML = "";
         const img = document.createElement("img");
         img.src = URL.createObjectURL(file);
+        img.loading = "lazy"; img.decoding = "async";
         img.style.width = "100%"; img.style.borderRadius = "12px"; img.style.marginTop = "6px";
         $.previewWrap.appendChild(img);
       }
@@ -722,12 +777,48 @@
 
     $.cancelUpload.onclick = () => { setModal(false); pendingLatLng = null; };
 
+    async function compressImageIfNeeded(file, maxDim=1920, maxMB=2){
+      try{
+        if (!/^image\\//.test(file.type)) return file;
+        const blobURL = URL.createObjectURL(file);
+        const img = await new Promise((res, rej)=>{
+          const im = new Image();
+          im.onload = ()=> res(im);
+          im.onerror = rej;
+          im.src = blobURL;
+        });
+        const { width, height } = img;
+        const scale = Math.min(1, maxDim / Math.max(width, height));
+        const canvas = document.createElement('canvas');
+        canvas.width = Math.round(width * scale);
+        canvas.height = Math.round(height * scale);
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+        let quality = 0.9;
+        let blob = await new Promise(r=> canvas.toBlob(r, 'image/jpeg', quality));
+        while (blob && blob.size > maxMB*1024*1024 && quality > 0.5){
+          quality -= 0.1;
+          blob = await new Promise(r=> canvas.toBlob(r, 'image/jpeg', quality));
+        }
+        URL.revokeObjectURL(blobURL);
+        if (!blob) return file;
+        if (blob.size < file.size) {
+          return new File([blob], (file.name.split('.').slice(0,-1).join('.') || 'image') + '.jpg', { type: 'image/jpeg' });
+        }
+        return file;
+      }catch{ return file; }
+    }
+
     $.confirmUpload.onclick = async () => {
       try {
         $.uploadErr.textContent = "";
         const user = await getSessionUser(); if (!user) { alert("Önce giriş yapınız."); return; }
         if (!pendingLatLng) { pendingLatLng = map.getCenter(); }
-        const f = $.fileInput.files?.[0]; if (!f) { $.uploadErr.textContent = "Lütfen fotoğraf seçin."; return; }
+        let f = $.fileInput.files?.[0]; if (!f) { $.uploadErr.textContent = "Lütfen fotoğraf seçin."; return; }
+
+        // iOS performansı için sıkıştır
+        f = await compressImageIfNeeded(f, 1920, 2);
 
         const ext = f.name.split(".").pop() || "jpg";
         const path = `${user.id}/${Date.now()}.${ext}`;
@@ -740,20 +831,21 @@
         const { error: insErr } = await supabase.from("photos").insert({ user_id: user.id, lat: pendingLatLng.lat, lng: pendingLatLng.lng, image_url: imageUrl });
         if (insErr) { $.uploadErr.textContent = "DB hata: " + insErr.message; return; }
 
-        const { data: prof } = await supabase.from("user_profiles").select("coin,posts").eq("id", user.id).single();
+        const { data: prof } = await supabase.from("user_profiles").select("coin,posts,avatar_url").eq("id", user.id).single();
         if (prof) {
+          // İlk foto ise avatar olarak ata (avatar yoksa)
+          if (!prof.avatar_url) { await supabase.from('user_profiles').update({ avatar_url: imageUrl }).eq('id', user.id); }
           await supabase.from("user_profiles").update({ coin: (prof.coin ?? 0)+10, posts: (prof.posts ?? 0)+1 }).eq("id", user.id);
         }
 
         setModal(false); pendingLatLng = null;
-        await updateUserPanel(user.id); await loadPhotos(currentFilterUserId); await loadTopUsers();
+        await updateUserPanel(user.id); await loadPhotos(currentFilterUserId);
+        await refreshAvatarPreview(user.id);
         alert("Fotoğraf yüklendi!");
       } catch (e) { $.uploadErr.textContent = "Beklenmeyen hata: " + (e?.message || e); }
     };
 
-    // =========================
-    //  Fotoğraf Düzenleme (konum + etiket/opsiyonel)
-    // =========================
+    // ===== Fotoğraf Düzenleme (konum + etiket) =====
     $.cancelEditPhoto.onclick = () => { setEditPhotoModal(false); editingPhoto=null; pendingEditLatLng=null; $.editPhotoErr.textContent=''; };
 
     $.editPickOnMap.onclick = () => {
@@ -783,20 +875,18 @@
       try {
         const { error } = await supabase.from('photos').update(updates).eq('id', editingPhoto.id);
         if (error) {
-          $.editPhotoErr.textContent = error.message.includes('column') ? 'Etiket alanı için tabloya tags TEXT kolonu ekleyin.' : error.message;
+          $.editPhotoErr.textContent = error.message.includes('column') ? 'Etiket için tabloya tags TEXT kolonu ekleyin.' : error.message;
           return;
         }
-        setEditPhotoModal(false); 
+        setEditPhotoModal(false);
         const centerTo = pendingEditLatLng ? [pendingEditLatLng.lat, pendingEditLatLng.lng] : [editingPhoto.lat, editingPhoto.lng];
         editingPhoto=null; pendingEditLatLng=null; $.editTags.value='';
         await loadPhotos(currentFilterUserId);
-        map.setView(centerTo, map.getZoom()); // HARİTAYI YENİ KONUMA TAŞI
+        map.setView(centerTo, 14); // yeni konuma odaklan
       } catch (err){ $.editPhotoErr.textContent = err?.message || String(err); }
     };
 
-    // =========================
-    //  Auth Actions + Şifre değişikliği + Avatar fallback
-    // =========================
+    // ===== Auth + Profil Düzenleme (inline, sade) =====
     $.showRegister.onclick = () => { $.loginBox.style.display = "none"; $.regBox.style.display = "block"; };
     $.showLogin.onclick = () => { $.regBox.style.display = "none"; $.loginBox.style.display = "block"; };
 
@@ -830,22 +920,20 @@
 
     $.btnLogout.onclick = async () => { await supabase.auth.signOut(); await refreshUI(); };
 
-    $.editProfile.onclick = async () => {
-      const me = await getSessionUser(); if (!me) return;
-      const { data: prof } = await supabase.from("user_profiles").select("username").eq("id", me.id).single();
-      $.editUsername.value = prof?.username || me.email;
-      $.newPass.value = ''; $.newPass2.value=''; $.editAvatar.value=''; $.editErr.textContent='';
-      setEditModal(true);
+    // Şifre alanlarını butonla aç/kapat
+    $.btnTogglePass.onclick = () => {
+      const disabled = $.newPass.disabled;
+      $.newPass.disabled = !disabled;
+      $.newPass2.disabled = !disabled;
+      if (!disabled) { $.newPass.value=''; $.newPass2.value=''; }
     };
 
-    $.cancelEdit.onclick = () => setEditModal(false);
-
     async function safeUpdateUserProfile(updates){
-      // avatar_url kolonu yoksa ikinci deneme avatar_url'süz yapılır
-      let { error } = await supabase.from('user_profiles').update(updates).eq('id', (await getSessionUser()).id);
+      const me = await getSessionUser();
+      let { error } = await supabase.from('user_profiles').update(updates).eq('id', me.id);
       if (error && /avatar_url/i.test(error.message)){
         const noAvatar = {...updates}; delete noAvatar.avatar_url;
-        const r2 = await supabase.from('user_profiles').update(noAvatar).eq('id', (await getSessionUser()).id);
+        const r2 = await supabase.from('user_profiles').update(noAvatar).eq('id', me.id);
         if (r2.error) throw r2.error; else return r2;
       } else if (error) { throw error; }
       return { error:null };
@@ -867,65 +955,168 @@
         if (pErr) { $.editErr.textContent = pErr.message; return; }
       }
 
+      // avatar dosyası → yükle
       let updates = {};
       if (newName) updates.username = newName;
 
+      let wantAvatarUrl = null;
       if (avatarFile) {
-        const ext = avatarFile.name.split('.').pop() || 'jpg';
+        const f = await compressImageIfNeeded(avatarFile, 1024, 1.5);
+        const ext = f.name.split('.').pop() || 'jpg';
         const avatarPath = `avatars/${me.id}.${ext}`;
         let uploaded = false;
-        let publicUrl = null;
         try {
-          const { error: upErr } = await supabase.storage.from('avatars').upload(avatarPath, avatarFile, { upsert: true });
-          if (!upErr) {
-            const { data: pub } = await supabase.storage.from('avatars').getPublicUrl(avatarPath);
-            publicUrl = pub?.publicUrl; uploaded = true;
-          }
-        } catch(_){}
+          const { error: upErr } = await supabase.storage.from('avatars').upload(avatarPath, f, { upsert: true });
+          if (!upErr) { const { data: pub } = await supabase.storage.from('avatars').getPublicUrl(avatarPath); wantAvatarUrl = pub?.publicUrl; uploaded = true; }
+        } catch(_) {}
         if (!uploaded){
           const fallbackPath = `avatars/${me.id}.${ext}`;
-          const { error: upErr2 } = await supabase.storage.from('photos').upload(fallbackPath, avatarFile, { upsert: true });
-          if (!upErr2) {
-            const { data: pub2 } = await supabase.storage.from('photos').getPublicUrl(fallbackPath);
-            publicUrl = pub2?.publicUrl; uploaded = true;
-          }
+          const { error: upErr2 } = await supabase.storage.from('photos').upload(fallbackPath, f, { upsert: true });
+          if (!upErr2) { const { data: pub2 } = await supabase.storage.from('photos').getPublicUrl(fallbackPath); wantAvatarUrl = pub2?.publicUrl; }
         }
-        if (uploaded) updates.avatar_url = publicUrl; else $.editErr.textContent = 'Avatar yüklenemedi. Lütfen storage bucket/bucket policy kontrol edin.';
+      } else {
+        // Seçilmediyse ve profilde avatar yoksa → ilk foto
+        const { data: prof } = await supabase.from('user_profiles').select('avatar_url').eq('id', me.id).single();
+        if (!prof?.avatar_url){
+          const { data: firstPhoto } = await supabase.from('photos').select('image_url').eq('user_id', me.id).order('id', { ascending: true }).limit(1).maybeSingle();
+          if (firstPhoto?.image_url) wantAvatarUrl = firstPhoto.image_url;
+        }
       }
+      if (wantAvatarUrl) updates.avatar_url = wantAvatarUrl;
 
-      try {
-        await safeUpdateUserProfile(updates);
-      } catch(e){ $.editErr.textContent = e.message || String(e); return; }
+      try { await safeUpdateUserProfile(updates); }
+      catch(e){ $.editErr.textContent = e.message || String(e); return; }
 
-      setEditModal(false);
       await refreshUI();
+      alert('Profil güncellendi.');
     };
 
-    // feature buttons (stub)
+    // Photo Settings
+    $.openPhotoSettings.onclick = async () => {
+      const me = await getSessionUser(); if (!me) return;
+      const { data: photos } = await supabase.from('photos').select('id,image_url,lat,lng').eq('user_id', me.id).order('id', { ascending:false });
+      $.photoSettingsList.innerHTML = (photos||[]).map(p=>`
+        <div style="display:flex; gap:10px; align-items:center; border:1px solid #eee; border-radius:10px; padding:8px; margin-bottom:8px;">
+          <img src="${p.image_url}" style="width:64px;height:64px;object-fit:cover;border-radius:8px;" loading="lazy" decoding="async"/>
+          <div style="flex:1;">
+            <div>ID: <b>${p.id}</b></div>
+            <div class="muted">Lat: ${p.lat.toFixed(5)} Lng: ${p.lng.toFixed(5)}</div>
+          </div>
+          <div class="row" style="gap:6px;">
+            <button class="btn ghost btnPSGo" data-id="${p.id}">Haritada Göster</button>
+            <button class="btn btnPSEdit" data-id="${p.id}">Konum Düzenle</button>
+            <button class="btn" style="border-color:#f3c; color:#c00;" data-role="del" data-id="${p.id}">Sil</button>
+          </div>
+        </div>
+      `).join('') || '<div class="muted">Henüz fotoğraf yok.</div>';
+
+      // handlers
+      $.photoSettingsList.querySelectorAll('.btnPSGo').forEach(b=>{
+        b.onclick = async () => {
+          const id = parseInt(b.dataset.id,10);
+          const { data: p } = await supabase.from('photos').select('*').eq('id', id).single();
+          if (p) { setPhotoSettingsModal(false); currentFilterUserId=null; await loadPhotos(null); map.setView([p.lat,p.lng], 13); }
+        };
+      });
+      $.photoSettingsList.querySelectorAll('.btnPSEdit').forEach(b=>{
+        b.onclick = async () => {
+          const id = parseInt(b.dataset.id,10);
+          const { data: p } = await supabase.from('photos').select('*').eq('id', id).single();
+          if (p) {
+            editingPhoto = p; pendingEditLatLng = { lat: p.lat, lng: p.lng };
+            $.editPhotoLoc.textContent = `Konum: ${p.lat.toFixed(5)}, ${p.lng.toFixed(5)}`;
+            $.editTags.value = '';
+            setPhotoSettingsModal(false);
+            setEditPhotoModal(true);
+          }
+        };
+      });
+      $.photoSettingsList.querySelectorAll('[data-role="del"]').forEach(b=>{
+        b.onclick = async () => {
+          const id = parseInt(b.dataset.id,10);
+          if (!confirm('Fotoğraf silinsin mi?')) return;
+          await supabase.from('photos').delete().eq('id', id);
+          // post sayısı düşür
+          const me = await getSessionUser();
+          const { data: prof } = await supabase.from('user_profiles').select('posts').eq('id', me.id).single();
+          if (prof) await supabase.from('user_profiles').update({ posts: Math.max(0,(prof.posts||0)-1) }).eq('id', me.id);
+          await loadPhotos(currentFilterUserId);
+          $.openPhotoSettings.click(); // yenile
+        };
+      });
+
+      setPhotoSettingsModal(true);
+    };
+    $.closePhotoSettings.onclick = () => setPhotoSettingsModal(false);
+
+    // feature buttons (placeholder)
     document.querySelectorAll('.feat').forEach(b=> b.onclick = ()=> alert(`${b.textContent} yakında!`));
 
-    // =========================
-    //  Nav + Mobile (3.3)
-    // =========================
+    // ===== Nav + Mobile =====
     const sidebarEl = document.querySelector('.sidebar');
     const rightEl = document.querySelector('.right');
     document.querySelector('#menuToggle').onclick = () => {
       if (sidebarEl.classList.contains('active') || rightEl.classList.contains('active')) {
-        sidebarEl.classList.remove('active');
-        rightEl.classList.remove('active');
-      } else {
-        sidebarEl.classList.add('active');
-      }
+        sidebarEl.classList.remove('active'); rightEl.classList.remove('active');
+      } else { sidebarEl.classList.add('active'); }
     };
 
-    // =========================
-    //  Nav (ev, yenile)
-    // =========================
     $.homeBtn.onclick = async () => { currentFilterUserId = null; await loadPhotos(null); };
     $.refreshBtn.onclick = async () => { await refreshUI(); };
 
-    // İlk yükleme
+    // ===== İlk yükleme =====
     refreshUI();
+  </script>
+
+  <!-- =========================
+       Service Worker register
+  ========================== -->
+  <script>
+    if ("serviceWorker" in navigator) {
+      navigator.serviceWorker.register("service-worker.js")
+        .then(() => console.log("Service Worker kayıt oldu"));
+    }
+  </script>
+
+  <!-- =========================
+       PWA Install Prompt
+  ========================== -->
+  <div id="installBanner" class="row">
+    <button id="btnInstall" class="btn primary">📱 Ana Ekrana Ekle</button>
+  </div>
+  <script>
+    let deferredPrompt = null;
+    const banner = document.getElementById('installBanner');
+    const btnInstall = document.getElementById('btnInstall');
+
+    window.addEventListener("beforeinstallprompt", (e) => {
+      e.preventDefault();
+      deferredPrompt = e;
+      banner.style.display = "block";
+    });
+
+    btnInstall.addEventListener("click", async () => {
+      if (!deferredPrompt) return;
+      banner.style.display = "none";
+      deferredPrompt.prompt();
+      const { outcome } = await deferredPrompt.userChoice;
+      console.log("Install choice:", outcome);
+      deferredPrompt = null;
+    });
+
+    // iOS (Safari) için ipucu: beforeinstallprompt yok
+    const isIOS2 = /iphone|ipad|ipod/i.test(navigator.userAgent);
+    const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
+    if (isIOS2 && !isStandalone) {
+      const tip = document.createElement('div');
+      tip.style.position = 'fixed';
+      tip.style.left = '50%'; tip.style.transform = 'translateX(-50%)';
+      tip.style.bottom = '20px'; tip.style.zIndex = '3500';
+      tip.style.background = '#111'; tip.style.color = '#fff'; tip.style.padding = '8px 12px'; tip.style.borderRadius = '999px';
+      tip.textContent = '➕ Paylaş › Ana Ekrana Ekle ile yükleyin';
+      document.body.appendChild(tip);
+      setTimeout(()=> tip.remove(), 8000);
+    }
   </script>
 </body>
 </html>
