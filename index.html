@@ -146,11 +146,59 @@
   .right.active { transform:translateX(0); right:0; left:auto; }
   .right { z-index: 2500; }
 }
+/* ====== HAMBURGER: Sağ panel aç/kapa (mobil) ====== */
+.right-menu-btn {
+  position: fixed;
+  top: 12px;
+  right: 12px;
+  width: 42px;
+  height: 42px;
+  border-radius: 8px;
+  background: rgba(255,255,255,0.85);
+  color: #111;
+  font-size: 22px;
+  font-weight: bold;
+  border: 1px solid #ccc;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+  z-index: 5000;
+  cursor: pointer;
+  display: none; /* masaüstünde gizli */
+}
+
+/* Mobilde buton görünür, sağ panel kayarak açılır */
+@media (max-width: 768px) {
+  .right-menu-btn {
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
+  }
+  .right {
+    position: fixed !important;
+    top: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    width: 85% !important;
+    max-width: 420px !important;
+    background: rgba(255,255,255,0.9) !important;
+    -webkit-backdrop-filter: blur(10px) !important; /* iPhone için */
+    backdrop-filter: blur(10px) !important;
+    transform: translateX(100%) !important; /* kapalı başlasın */
+    transition: transform .3s ease-in-out !important;
+    z-index: 4000 !important;
+    overflow: auto; /* içerik kaydırılabilir olsun */
+  }
+  .right.active {
+    transform: translateX(0) !important; /* açıldığında ekrana gelsin */
+  }
+}
 
   </style>
 </head>
 <body>
   <div class="app">
+    <!-- Sağ Panel Açma Butonu (mobilde görünür) -->
+<button id="rightMenuToggle" class="right-menu-btn" aria-label="Profile panelini aç">☰</button>
+
     <div id="menuToggle">☰</div>
 
     <!-- SOL PANEL -->
@@ -927,6 +975,26 @@
       var isIOS=/iphone|ipad|ipod/i.test(navigator.userAgent); var isStandalone=(window.matchMedia&&window.matchMedia('(display-mode: standalone)').matches)||window.navigator.standalone;
       if (isIOS && !isStandalone){ var tip=document.createElement('div'); tip.style.position='fixed'; tip.style.left='50%'; tip.style.transform='translateX(-50%)'; tip.style.bottom='20px'; tip.style.zIndex='3500'; tip.style.background='#111'; tip.style.color='#fff'; tip.style.padding='8px 12px'; tip.style.borderRadius='999px'; tip.textContent='➕ Paylaş › Ana Ekrana Ekle'; document.body.appendChild(tip); setTimeout(function(){ try{ tip.remove(); }catch(e){} }, 8000); }
     })();
+    <script>
+  // --- Sağ panel hamburger butonu kontrolü ---
+  (function(){
+    var rightPanel = document.querySelector('.right');
+    var rightMenuToggle = document.getElementById('rightMenuToggle');
+
+    if (rightPanel && rightMenuToggle) {
+      // iOS tıklama gecikmesi yaşamamak için hem touchstart hem click
+      var toggle = function(e){
+        e.preventDefault && e.preventDefault();
+        rightPanel.classList.toggle('active');
+      };
+      rightMenuToggle.addEventListener('touchstart', toggle, {passive:false});
+      rightMenuToggle.addEventListener('click', toggle);
+
+      // Haritaya/arkaya tıklayınca sağ paneli kapatmak istersen (opsiyonel):
+      // document.getElementById('map').addEventListener('click', function(){ rightPanel.classList.remove('active'); });
+    }
+  })();
+
   </script>
 </body>
 </html>
