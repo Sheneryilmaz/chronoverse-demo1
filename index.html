@@ -32,12 +32,19 @@
     html,body { height:100%; margin:0; font-family: Inter, Arial, sans-serif; background:#fff; }
     .app { display:flex; height:100vh; width:100vw; }
 
-    .sidebar, .right {
-      width: var(--panelW); min-width: var(--panelMin); max-width: var(--panelMax);
-      background: var(--panelBg); backdrop-filter: blur(var(--panelBlur));
-      border-right:1px solid #e5e5e5; padding:14px; overflow:auto;
-      transition: background .2s ease;
-    }
+   .sidebar, .right {
+  width: var(--panelW);
+  min-width: var(--panelMin);
+  max-width: var(--panelMax);
+  background: var(--panelBg);
+  -webkit-backdrop-filter: blur(var(--panelBlur)); /* iPhone için gerekli */
+  backdrop-filter: blur(var(--panelBlur));
+  border-right:1px solid #e5e5e5;
+  padding:14px;
+  overflow:auto;
+  transition: background .2s ease;
+}
+
     .sidebar:hover, .right:hover { background: var(--panelBgHover); }
     .right { border-right:none; border-left:1px solid #e5e5e5; }
     .mapwrap { flex:1; position:relative; display:flex; flex-direction:column; }
