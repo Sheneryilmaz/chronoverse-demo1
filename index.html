@@ -975,6 +975,9 @@
       var isIOS=/iphone|ipad|ipod/i.test(navigator.userAgent); var isStandalone=(window.matchMedia&&window.matchMedia('(display-mode: standalone)').matches)||window.navigator.standalone;
       if (isIOS && !isStandalone){ var tip=document.createElement('div'); tip.style.position='fixed'; tip.style.left='50%'; tip.style.transform='translateX(-50%)'; tip.style.bottom='20px'; tip.style.zIndex='3500'; tip.style.background='#111'; tip.style.color='#fff'; tip.style.padding='8px 12px'; tip.style.borderRadius='999px'; tip.textContent='➕ Paylaş › Ana Ekrana Ekle'; document.body.appendChild(tip); setTimeout(function(){ try{ tip.remove(); }catch(e){} }, 8000); }
     })();
+    </script> 
+
+
     <script>
   // --- Sağ panel hamburger butonu kontrolü ---
   (function(){
@@ -998,3 +1001,4 @@
   </script>
 </body>
 </html>
+
