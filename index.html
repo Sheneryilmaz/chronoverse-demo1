@@ -33,16 +33,78 @@
     .app { display:flex; height:100vh; width:100vw; }
 
    .sidebar, .right {
-  width: var(--panelW);
-  min-width: var(--panelMin);
-  max-width: var(--panelMax);
-  background: var(--panelBg);
-  -webkit-backdrop-filter: blur(var(--panelBlur)); /* iPhone için gerekli */
-  backdrop-filter: blur(var(--panelBlur));
-  border-right:1px solid #e5e5e5;
+  width: 300px;
+  min-width: 250px;
+  max-width: 380px;
+  background-color: rgba(255, 255, 255, 0.4) !important; /* Daha şeffaf */
+  -webkit-backdrop-filter: blur(18px) saturate(180%) !important; /* iPhone uyumlu blur */
+  backdrop-filter: blur(18px) saturate(180%) !important;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
   padding:14px;
-  overflow:auto;
-  transition: background .2s ease;
+  overflow-y:auto;
+  transition: transform .3s ease-in-out;
+}
+
+/* Sağ panelin görünümünü modernize ediyoruz */
+.right {
+  background: rgba(255, 255, 255, 0.9) !important;
+  backdrop-filter: blur(12px) saturate(180%);
+  -webkit-backdrop-filter: blur(12px) saturate(180%);
+  border-left: 1px solid rgba(255, 255, 255, 0.25);
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.section {
+  background: #fff;
+  border-radius: 14px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.05);
+  padding: 12px;
+  margin-bottom: 12px;
+}
+.photo-card {
+  display: flex;
+  gap: 12px;
+  padding: 10px;
+  border-radius: 14px;
+  border: 1px solid #eaeaea;
+  background: #fff;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  transition: box-shadow .2s ease-in-out;
+  margin-bottom: 10px;
+}
+.photo-card:hover {
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+}
+.photo-thumb {
+  width: 72px;
+  height: 72px;
+  object-fit: cover;
+  border-radius: 10px;
+}
+.photo-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+.photo-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.photo-actions .edit-btn {
+  background: #eef5ff;
+  border: 1px solid #c6dbff;
+  color: #1a73e8;
+}
+.photo-actions .del-btn {
+  background: #ffefef;
+  border: 1px solid #f8c6c6;
+  color: #c62828;
 }
 
     .sidebar:hover, .right:hover { background: var(--panelBgHover); }
@@ -98,8 +160,23 @@
 
     /* Notifications dropdown */
     .notifWrap { position:relative; }
-    .notifDropdown { position:absolute; right:0; top:40px; width:320px; max-height:60vh; overflow:auto; background:#fff; border:1px solid #eaeaea; border-radius:14px; box-shadow:0 12px 30px rgba(0,0,0,.14); display:none; }
-    .notifDropdown.active { display:block; }
+    /* eski: right:0; top:40px; width:320px; ... */
+.notifDropdown{
+  position: absolute;
+  left: 0;            /* ekle */
+  right: 0;           /* ekle */
+  top: 40px;
+  width: 100%;        /* 320px yerine bu */
+  max-height: min(60vh, 520px);
+  overflow: auto;
+  background: #fff;
+  border: 1px solid #eaeaea;
+  border-radius: 14px;
+  box-shadow: 0 12px 30px rgba(0,0,0,.14);
+  display: none;
+  box-sizing: border-box; /* taşmaları önlemek için */
+}
+.notifDropdown.active { display:block; }
     .notifItem { padding:10px 12px; border-bottom:1px solid #f1f1f1; }
     .notifItem:last-child { border-bottom:0; }
 
@@ -191,6 +268,189 @@
     transform: translateX(0) !important; /* açıldığında ekrana gelsin */
   }
 }
+/* Profil Ayarları */
+.profile-avatar-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+.profile-avatar {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 1px solid #ddd;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
+  transition: transform 0.2s ease-in-out;
+}
+
+/* Hover'da hafif büyütme efekti */
+.profile-avatar:hover {
+  transform: scale(1.05);
+}
+
+.avatar-upload-btn {
+  padding: 4px 10px;
+  background: #f7f8fc;
+  border: 1px solid #d8dbe2;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 12px;
+  transition: background .2s ease-in-out;
+}
+.avatar-upload-btn:hover {
+  background: #eef1ff;
+}
+
+.profile-input-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 12px;
+}
+.profile-input-wrap label {
+  font-size: 13px;
+  color: #444;
+}
+.profile-input-wrap input {
+  padding: 8px;
+  border: 1px solid #d8dbe2;
+  border-radius: 8px;
+  font-size: 14px;
+  background: #fff;
+}
+
+.profile-save-wrap {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 10px;
+}
+
+.small-btn {
+  padding: 5px 8px !important;
+  font-size: 12px !important;
+}
+/* ==== Notifications - modern timeline ==== */
+.notifDropdown {
+  border: 1px solid #ececec;
+  border-radius: 14px;
+  overflow: hidden;
+  background: #fff;
+}
+
+.notifHeader {
+  position: sticky;
+  top: 0;
+  background: #f8faff;
+  border-bottom: 1px solid #eef1f6;
+  padding: 10px 12px;
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  justify-content: space-between;
+  z-index: 1;
+}
+
+.notifHeader .actions { display: flex; gap: 8px; }
+
+#notifList {
+  padding: 6px 0;
+}
+
+.notifGroupDate {
+  margin: 6px 12px 8px;
+  font-size: 12px;
+  color: #6b7280;
+  text-transform: uppercase;
+  letter-spacing: .04em;
+}
+
+.notifItem {
+  padding: 10px 12px;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 8px;
+  border-bottom: 1px solid #f1f3f6;
+}
+
+.notifItem:last-child { border-bottom: 0; }
+
+.notifMain { display: flex; gap: 8px; align-items: flex-start; }
+.notifType {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 12px;
+  border: 1px solid #e6e6e6;
+  background: #fafafa;
+  white-space: nowrap;
+}
+
+.notifMsg { font-size: 14px; color: #111; }
+.notifTime { font-size: 12px; color: #6b7280; }
+
+.notifActions { display: flex; gap: 6px; align-items: center; }
+.notifActions .btn { padding: 6px 8px; font-size: 12px; }
+
+.notifItem.unread {
+  background: #fffdfa;
+}
+.notifItem.unread .notifType {
+  border-color: #f7e2b7;
+  background: #fff3c4;
+}
+
+#notifBadge {
+  min-width: 18px;
+  height: 18px;
+  font-size: 11px;
+  padding: 0 6px;
+}
+
+/* küçük ekranlarda dropdown daha geniş nefes alsın */
+@media (max-width: 768px) {
+  .notifDropdown { width: min(92vw, 420px); right: 8px; }
+}
+/* ==== Top Users - modern cards ==== */
+#topList { display: grid; grid-template-columns: 1fr; gap: 10px; }
+@media (min-width: 420px){ #topList { grid-template-columns: 1fr; } }
+
+.user-card {
+  display: grid;
+  grid-template-columns: 42px 1fr auto;
+  gap: 10px;
+  align-items: center;
+  padding: 10px;
+  border: 1px solid #eaeaea;
+  border-radius: 12px;
+  background: #fff;
+  box-shadow: 0 2px 10px rgba(0,0,0,.06);
+  transition: box-shadow .2s ease;
+}
+.user-card:hover { box-shadow: 0 4px 16px rgba(0,0,0,.12); }
+
+.user-avatar {
+  width: 42px; height: 42px; border-radius: 50%;
+  object-fit: cover; border: 1px solid #eee;
+}
+
+.user-meta { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.user-name { font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.user-stats { display: flex; gap: 8px; font-size: 12px; color: #666; }
+.user-stat { display: inline-flex; gap: 4px; align-items: center; }
+
+.user-actions { display: flex; gap: 6px; }
+.user-actions .btn { padding: 6px 8px; font-size: 12px; border-radius: 8px; }
+.user-actions .follow { background: #eef5ff; border: 1px solid #cfe1ff; }
+.user-actions .following { background: #f1fff2; border: 1px solid #cdeccf; }
+
+.user-skel {
+  height: 64px; border-radius: 12px; background: linear-gradient(90deg,#f4f5f7 0%,#f9f9fb 50%,#f4f5f7 100%);
+  animation: skel 1.2s ease-in-out infinite; border: 1px solid #eee;
+}
+@keyframes skel { 0%{background-position:-200px 0} 100%{background-position:200px 0} }
 
   </style>
 </head>
@@ -309,24 +569,40 @@
         </div>
 
         <div id="profileSettingsSection" class="section hidden">
-          <div class="row" style="align-items:center; gap:12px; margin-bottom:10px;">
-            <img id="avatarPreview" src="" alt="avatar" style="width:56px; height:56px; border-radius:50%; object-fit:cover; background:#eee;"/>
-            <input id="editAvatar" type="file" accept="image/*"/>
-          </div>
-          <input id="editUsername" type="text" placeholder="Kullanıcı adı"/>
+          <h4 style="margin:0 0 12px 0;">Profil Ayarları</h4>
 
-          <div style="margin-top:8px;">
-            <button id="btnTogglePass" class="btn">Change Password</button>
-            <div id="passWrap" class="row" style="gap:8px; margin-top:6px;">
-              <input id="newPass" type="password" placeholder="Yeni şifre" disabled/>
-              <input id="newPass2" type="password" placeholder="Yeni şifre tekrar" disabled/>
-            </div>
-          </div>
-          <div class="row" style="justify-content:flex-end; gap:8px; margin-top:10px;">
-            <button id="saveEdit" class="btn primary">Kaydet</button>
-          </div>
-          <div id="editErr" class="error"></div>
-        </div>
+        <!-- Avatar Alanı -->
+       <div class="profile-avatar-wrap">
+       <img id="avatarPreview" src="" alt="avatar" class="profile-avatar"/>
+       <label class="btn avatar-upload-btn">
+      📷 Yeni Avatar
+      <input id="editAvatar" type="file" accept="image/*" hidden />
+    </label>
+  </div>
+
+  <!-- Kullanıcı Adı -->
+  <div class="profile-input-wrap">
+    <label for="editUsername">Kullanıcı Adı</label>
+    <input id="editUsername" type="text" placeholder="Yeni kullanıcı adınız..." />
+  </div>
+
+  <!-- Şifre Güncelleme -->
+  <div class="profile-input-wrap">
+    <label>Şifre Değiştir</label>
+    <button id="btnTogglePass" class="btn ghost small-btn">Şifre Güncelle</button>
+    <div id="passWrap" class="row" style="gap:8px; margin-top:6px;">
+      <input id="newPass" type="password" placeholder="Yeni şifre" disabled />
+      <input id="newPass2" type="password" placeholder="Tekrar" disabled />
+    </div>
+  </div>
+
+  <!-- Kaydet Butonu -->
+  <div class="profile-save-wrap">
+    <button id="saveEdit" class="btn primary">Değişiklikleri Kaydet</button>
+  </div>
+
+  <div id="editErr" class="error"></div>
+</div>
 
         <!-- Photo Settings: sağ panel içinde -->
         <div id="photoSettingsSection" class="section hidden">
@@ -409,7 +685,11 @@
     }
 
     var markers = [];
-    function clearMarkers(){ while(markers.length){ try{ map.removeLayer(markers.pop()); }catch(e){} } }
+    function clearMarkers() {
+  markers.forEach(m => map.removeLayer(m));
+  markers = [];
+}
+
     // Refs
     var $ = {
       // left
@@ -510,75 +790,148 @@
     supabase.auth.onAuthStateChange(function(){ refreshUI(); });
 
     // Notifications
-    function typeLabel(t){ return t === 'like' ? '❤️ Beğeni' : t === 'comment' ? '💬 Yorum' : '➕ Takip'; }
-    function fmtTime(iso){ try{ return new Date(iso).toLocaleString(); }catch(e){ return ""; } }
+    function typeLabel(t){
+  return t === 'like' ? '❤️ Beğeni'
+       : t === 'comment' ? '💬 Yorum'
+       : '➕ Takip';
+}
 
-    async function loadNotifications(userId){
-      var res = await supabase.from("notifications")
-        .select("id,type,message,is_read,created_at,photo_id,comment_id,actor")
-        .eq("recipient", userId)
-        .order("created_at", { ascending:false })
-        .limit(40);
-      if (!res || res.error) return;
-      var data = res.data || [];
+    // "x dakika önce" biçimi
+    function timeAgo(iso){
+    try {
+    const now = Date.now();
+    const then = new Date(iso).getTime();
+    const diff = Math.max(0, now - then);
+    const sec = Math.floor(diff / 1000);
+    if (sec < 60) return `${sec}s önce`;
+    const min = Math.floor(sec / 60);
+    if (min < 60) return `${min}dk önce`;
+    const hr = Math.floor(min / 60);
+    if (hr < 24) return `${hr}s önce`;
+    const day = Math.floor(hr / 24);
+    if (day < 7) return `${day}g önce`;
+    // daha eskiyse tarih/saat göster
+    return new Date(iso).toLocaleString();
+  } catch(e){ return ""; }
+}
 
-      var actorIds = [];
-      for (var i=0;i<data.length;i++){ var a = data[i].actor; if (a && actorIds.indexOf(a)===-1) actorIds.push(a); }
-      var nameMap = {};
-      if (actorIds.length){
-        var p = await supabase.from('user_profiles').select('id,username').in('id', actorIds);
-        var arr = p && p.data ? p.data : [];
-        for (var j=0;j<arr.length;j++){ nameMap[arr[j].id] = arr[j].username; }
-      }
+// Tarihi "Bugün", "Dün" veya YYYY-MM-DD olarak gruplamak
+function groupDateLabel(iso){
+  const d = new Date(iso);
+  const today = new Date(); today.setHours(0,0,0,0);
+  const that = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+  const diffDays = Math.round((today - that) / 86400000);
+  if (diffDays === 0) return "Bugün";
+  if (diffDays === 1) return "Dün";
+  return d.toLocaleDateString();
+}
 
-      var unread = 0; for (var k=0;k<data.length;k++){ if (!data[k].is_read) unread++; }
-      $.notifBadge.textContent = String(unread);
-      $.notifBadge.style.display = unread > 0 ? "inline-flex" : "none";
+async function loadNotifications(userId){
+  const res = await supabase
+    .from("notifications")
+    .select("id,type,message,is_read,created_at,photo_id,comment_id,actor")
+    .eq("recipient", userId)
+    .order("created_at", { ascending:false })
+    .limit(80);
 
-      var html = '';
-      for (var t=0;t<data.length;t++){
-        var n = data[t];
-        var actorName = nameMap[n.actor] ? '<b>'+escapeHtml(nameMap[n.actor])+'</b> ' : '';
-        var msg = n.type === 'like' ? (actorName+'fotoğrafını beğendi.')
-                : n.type === 'comment' ? (actorName+'yorum yaptı.')
-                : (actorName+'seni takip etti.');
-        html += '<div class="notifItem '+(n.is_read?'':'unread')+'">'+
-                '<div><span>'+typeLabel(n.type)+'</span> — '+msg+'</div>'+
-                '<div class="small">'+fmtTime(n.created_at)+'</div>'+
-                '<div class="row" style="justify-content:flex-end; gap:8px; margin-top:6px;">'+
-                (n.photo_id ? '<button class="btn ghost goPhoto" data-id="'+n.photo_id+'">Fotoğrafa git</button>' : '')+
-                (!n.is_read ? '<button class="btn markRead" data-id="'+n.id+'">Okundu ✓</button>' : '')+
-                '</div></div>';
-      }
-      $.notifList.innerHTML = html;
+  if (!res || res.error) return;
 
-      var goBtns = $.notifList.querySelectorAll(".goPhoto");
-      for (var g=0; g<goBtns.length; g++){
-        goBtns[g].onclick = async function(e){
-          var pid = parseInt(e.currentTarget.dataset.id, 10);
-          var rp = await supabase.from("photos").select("*").eq("id", pid).single();
-          var p = rp && rp.data ? rp.data : null;
-          if (p){ currentFilterUserId = null; await loadPhotos(null); map.setView([p.lat, p.lng], 12); $.notifDropdown.classList.remove('active'); }
-        };
-      }
-      var rdBtns = $.notifList.querySelectorAll(".markRead");
-      for (var r=0; r<rdBtns.length; r++){
-        rdBtns[r].onclick = async function(e){
-          var id = parseInt(e.currentTarget.dataset.id, 10);
-          await supabase.from("notifications").update({ is_read: true }).eq("id", id);
-          await loadNotifications(userId);
-        };
-      }
+  const data = res.data || [];
+
+  // Aktör isimlerini topla
+  const actorIds = [];
+  for (const n of data){ if (n.actor && !actorIds.includes(n.actor)) actorIds.push(n.actor); }
+  const nameMap = {};
+  if (actorIds.length){
+    const p = await supabase.from('user_profiles').select('id,username').in('id', actorIds);
+    const arr = p?.data || [];
+    for (const it of arr){ nameMap[it.id] = it.username; }
+  }
+
+  // okunmamış sayısı
+  let unread = 0;
+  for (const n of data){ if (!n.is_read) unread++; }
+  $.notifBadge.textContent = String(unread);
+  $.notifBadge.style.display = unread > 0 ? "inline-flex" : "none";
+
+  if (!data.length){
+    $.notifList.innerHTML = '<div class="muted" style="padding:12px;">Henüz bildirim yok.</div>';
+    return;
+  }
+
+  // Tarihe göre grupla
+  const groups = {};
+  for (const n of data){
+    const key = groupDateLabel(n.created_at);
+    if (!groups[key]) groups[key] = [];
+    groups[key].push(n);
+  }
+
+  // HTML üret
+  let html = '';
+  for (const gKey of Object.keys(groups)){
+    html += `<div class="notifGroupDate">${gKey}</div>`;
+    for (const n of groups[gKey]){
+      const actorName = nameMap[n.actor] ? `<b>${escapeHtml(nameMap[n.actor])}</b> ` : '';
+      const msg = n.type === 'like'
+        ? `${actorName}fotoğrafını beğendi.`
+        : n.type === 'comment'
+          ? `${actorName}yorum yaptı.`
+          : `${actorName}seni takip etti.`;
+
+      html += `
+        <div class="notifItem ${n.is_read ? '' : 'unread'}" data-id="${n.id}">
+          <div class="notifMain">
+            <span class="notifType">${typeLabel(n.type)}</span>
+            <div class="notifMsg">${msg}</div>
+          </div>
+          <div class="notifActions">
+            ${n.photo_id ? `<button class="btn ghost goPhoto" data-id="${n.photo_id}">Fotoğrafa git</button>` : ''}
+            ${!n.is_read ? `<button class="btn markRead" data-id="${n.id}">Okundu</button>` : ''}
+            <div class="notifTime">${timeAgo(n.created_at)}</div>
+          </div>
+        </div>
+      `;
     }
-    function subscribeNotifications(userId){
-      if (notifChannel) { try{ supabase.removeChannel(notifChannel);}catch(e){} }
-      notifChannel = supabase.channel('notif:'+userId)
-        .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'notifications', filter: 'recipient=eq.'+userId }, async function(){ await loadNotifications(userId); })
-        .subscribe();
-    }
+  }
+  $.notifList.innerHTML = html;
+
+  // Aksiyon bağları
+  $.notifList.querySelectorAll(".goPhoto").forEach(btn => {
+    btn.onclick = async (e) => {
+      const pid = parseInt(btn.dataset.id, 10);
+      const rp = await supabase.from("photos").select("*").eq("id", pid).single();
+      const p = rp?.data;
+      if (p){
+        currentFilterUserId = null;
+        await loadPhotos(null);
+        map.setView([p.lat, p.lng], 12);
+        $.notifDropdown.classList.remove('active');
+      }
+    };
+  });
+
+  $.notifList.querySelectorAll(".markRead").forEach(btn => {
+    btn.onclick = async (e) => {
+      const id = parseInt(btn.dataset.id, 10);
+      await supabase.from("notifications").update({ is_read: true }).eq("id", id);
+      await loadNotifications(userId);
+    };
+  });
+}
+
     $.btnReadAll.onclick = async function(){ var me = await getSessionUser(); if (!me) return; await supabase.from("notifications").update({ is_read: true }).eq("recipient", me.id).eq("is_read", false); await loadNotifications(me.id); };
     $.btnNotif.onclick = async function(){ var me = await getSessionUser(); if (!me) return; $.notifDropdown.classList.toggle('active'); if ($.notifDropdown.classList.contains('active')) await loadNotifications(me.id); };
     $.closeNotif.onclick = function(){ $.notifDropdown.classList.remove('active'); };
+   
+    // Dışarı tıklayınca dropdown'ı kapat
+  document.addEventListener('click', function(e){
+    const dd = $.notifDropdown;
+    if (!dd) return;
+    const inDropdown = e.target.closest('.notifDropdown');
+    const inButton = e.target.closest('#btnNotif');
+    if (!inDropdown && !inButton) dd.classList.remove('active');
+  });
 
     // Photos
     var currentFilterUserId = null;
@@ -586,103 +939,140 @@
     var editingPhoto = null;
     var pendingEditLatLng = null;
 
-    async function buildPopup(photo){
-      var me = await getSessionUser();
-      var lc = await supabase.from("likes").select("*",{count:"exact",head:true}).eq("photo_id", photo.id);
-      var likeCount = lc && typeof lc.count === 'number' ? lc.count : 0;
+async function buildPopup(photo) {
+  const me = await getSessionUser();
+  const { count: likeCount } = await supabase
+    .from("likes")
+    .select("*", { count: "exact", head: true })
+    .eq("photo_id", photo.id);
 
-      var liked = false;
-      if (me){
-        var ml = await supabase.from("likes").select("id").eq("photo_id", photo.id).eq("user_id", me.id).limit(1);
-        liked = ml && ml.data && ml.data.length > 0;
-      }
+  let liked = false;
+  if (me) {
+    const { data: myLike } = await supabase
+      .from("likes")
+      .select("id")
+      .eq("photo_id", photo.id)
+      .eq("user_id", me.id)
+      .limit(1);
+    liked = (myLike ?? []).length > 0;
+  }
 
-      var cr = await supabase.from("comments").select("id, content, created_at, user_id").eq("photo_id", photo.id).order("created_at", { ascending:false }).limit(50);
-      var comments = cr && cr.data ? cr.data : [];
+  const { data: comments } = await supabase
+    .from("comments")
+    .select("content,created_at,user_id")
+    .eq("photo_id", photo.id)
+    .order("created_at", { ascending: false })
+    .limit(50);
 
-      var usernames = {};
-      if (comments.length){
-        var uids = []; for (var i=0;i<comments.length;i++){ if (uids.indexOf(comments[i].user_id)===-1) uids.push(comments[i].user_id); }
-        var profs = await supabase.from("user_profiles").select("id, username").in("id", uids);
-        var arr = profs && profs.data ? profs.data : [];
-        for (var j=0;j<arr.length;j++){ usernames[arr[j].id] = arr[j].username; }
-      }
+  const wrap = document.createElement("div");
+  wrap.className = "popup";
+  wrap.innerHTML =
+    '<img src="' + photo.image_url + '" alt="photo" loading="lazy" decoding="async"/>' +
+    '<div class="row" style="align-items:center;">' +
+    '<div>' +
+    '<span class="like" title="beğen">' + (liked ? "❤️" : "🤍") + '</span> ' +
+    '<span><b>' + likeCount + '</b> likes</span>' +
+    '</div>' +
+    ((me && me.id === photo.user_id)
+      ? (
+        '<div class="dropdown" style="margin-left:auto;">' +
+        '<span class="menu-trigger">⋯</span>' +
+        '<div class="dropdown-menu">' +
+        '<button class="btnEditPhoto">📍 Konumu/etiketi düzenle</button>' +
+        '</div></div>'
+      ) : '') +
+    '</div>' +
+    '<div class="comments">' +
+    (comments ?? []).map(function (c) {
+      return '<div>• <b>' + escapeHtml(c.user_id) + '</b>: ' +
+        escapeHtml(c.content) +
+        '</div>';
+    }).join("") +
+    '</div>' +
+    '<input type="text" class="commentInput" placeholder="Yorum yaz ve Enter"/>';
 
-      var wrap = document.createElement("div");
-      wrap.className = "popup";
-      wrap.innerHTML =
-        '<img src="'+photo.image_url+'" alt="photo" loading="lazy" decoding="async"/>'+
-        '<div class="row" style="align-items:center;">'+
-          '<div>'+
-            '<span class="like" title="beğen">'+(liked ? "❤️" : "🤍")+'</span> '+
-            '<span><b>'+likeCount+'</b> likes</span>'+
-          '</div>'+
-          ((me && me.id === photo.user_id) ? 
-            ('<div class="dropdown" style="margin-left:auto;">'+
-              '<span class="menu-trigger">⋯</span>'+
-              '<div class="dropdown-menu">'+
-                '<button class="btnEditPhoto">Konumu/etiketi düzenle</button>'+
-              '</div></div>') : '')+
-        '</div>'+
-        '<div class="comments">'+
-          comments.map(function(c){
-            return '<div data-id="'+c.id+'">• <b>'+escapeHtml(usernames[c.user_id]||"?")+
-                   '</b>: '+escapeHtml(c.content)+
-                   ((me && me.id===c.user_id)?' <a href="#" class="editComment" data-id="'+c.id+'">düzenle</a>':'')+
-                   '</div>';
-          }).join("")+
-        '</div>'+
-        '<input type="text" class="commentInput" placeholder="Yorum yaz ve Enter"/>';
+  // Dropdown Menü Aç/Kapat
+  const trig = wrap.querySelector('.menu-trigger');
+  if (trig) {
+    const menu = wrap.querySelector('.dropdown-menu');
+    trig.onclick = function (e) {
+      e.stopPropagation();
+      menu.classList.toggle('active');
+    };
+  }
 
-      var trig = wrap.querySelector('.menu-trigger');
-      if (trig){ var menu = wrap.querySelector('.dropdown-menu'); trig.onclick = function(e){ e.stopPropagation(); menu.classList.toggle('active'); }; }
-
-      var likeBtn = wrap.querySelector(".like");
-      likeBtn.onclick = async function(){
-        var user = await getSessionUser();
-        if (!user) { alert("Önce giriş yapınız."); return; }
-        if (liked) {
-          await supabase.from("likes").delete().eq("photo_id", photo.id).eq("user_id", user.id);
-        } else {
-          await supabase.from("likes").insert({ photo_id: photo.id, user_id: user.id });
-          var owner = await supabase.from('user_profiles').select('coin').eq('id', photo.user_id).single();
-          if (owner && owner.data) await supabase.from('user_profiles').update({ coin: (owner.data.coin||0) + 5 }).eq('id', photo.user_id);
-        }
-        await loadPhotos(currentFilterUserId);
-      };
-
-      var ci = wrap.querySelector(".commentInput");
-      ci.addEventListener("keypress", async function(e){
-        if (e.key === "Enter") {
-          var user = await getSessionUser();
-          if (!user) { alert("Önce giriş yapınız."); return; }
-          var content = ci.value.trim();
-          if (!content) return;
-          await supabase.from("comments").insert({ photo_id: photo.id, user_id: user.id, content: content });
-          ci.value = "";
-          await loadPhotos(currentFilterUserId);
-        }
-      });
-
-      var edits = wrap.querySelectorAll('.editComment');
-      for (var x=0;x<edits.length;x++){
-        edits[x].onclick = async function(ev){
-          ev.preventDefault();
-          var id = parseInt(ev.currentTarget.dataset.id,10);
-          var txt = window.prompt('Yeni yorum metni:');
-          if (txt && txt.trim()) { await supabase.from('comments').update({ content: txt.trim() }).eq('id', id); await loadPhotos(currentFilterUserId); }
-        };
-      }
-
-      var btnEditPhoto = wrap.querySelector('.btnEditPhoto');
-      if (btnEditPhoto){
-        btnEditPhoto.onclick = function(){
-          editingPhoto = photo; pendingEditLatLng = { lat: photo.lat, lng: photo.lng };
-          alert("Konumu güncellemek için sağ panelde Photo Settings > ilgili foto'dan 'Konum Seç' butonunu da kullanabilirsiniz.");
-        };
-      }
-      return wrap;
+  // ❤️ Beğeni
+  const likeBtn = wrap.querySelector(".like");
+  likeBtn.onclick = async function () {
+    const user = await getSessionUser();
+    if (!user) { alert("Önce giriş yapınız."); return; }
+    if (liked) {
+      await supabase.from("likes").delete().eq("photo_id", photo.id).eq("user_id", user.id);
+    } else {
+      await supabase.from("likes").insert({ photo_id: photo.id, user_id: user.id });
+      const owner = await supabase.from('user_profiles').select('coin').eq('id', photo.user_id).single();
+      if (owner && owner.data)
+        await supabase.from('user_profiles').update({ coin: (owner.data.coin || 0) + 5 }).eq('id', photo.user_id);
     }
+    await loadPhotos(currentFilterUserId);
+  };
+
+  // 💬 Yorum ekleme
+  const ci = wrap.querySelector(".commentInput");
+  ci.addEventListener("keypress", async function (e) {
+    if (e.key === "Enter") {
+      const user = await getSessionUser();
+      if (!user) { alert("Önce giriş yapınız."); return; }
+      const content = ci.value.trim();
+      if (!content) return;
+      await supabase.from("comments").insert({ photo_id: photo.id, user_id: user.id, content: content });
+      ci.value = "";
+      await loadPhotos(currentFilterUserId);
+    }
+  });
+
+  // 📍 Konumu Değiştir
+  const btnEditPhoto = wrap.querySelector('.btnEditPhoto');
+if (btnEditPhoto) {
+  btnEditPhoto.onclick = function () {
+    alert("Yeni konumu haritadan seçin");
+
+    // Bir defaya mahsus tıklama dinleyicisi
+    map.once("click", async function (e) {
+      const newLat = e.latlng.lat;
+      const newLng = e.latlng.lng;
+
+      try {
+        // Supabase güncelleme
+        const { error } = await supabase
+          .from("photos")
+          .update({ lat: newLat, lng: newLng })
+          .eq("id", photo.id);
+
+        if (error) {
+          alert("Konum güncellenemedi: " + error.message);
+          return;
+        }
+
+        // Popup'u kapat
+        map.closePopup();
+
+        // Fotoğrafları yeniden yükle ve marker'ı güncelle
+        await loadPhotos(currentFilterUserId);
+
+        // Haritayı yeni konuma odakla
+        map.setView([newLat, newLng], 14);
+
+        alert("Konum başarıyla güncellendi!");
+      } catch (err) {
+        alert("Beklenmeyen hata: " + err.message);
+      }
+    });
+  };
+}
+
+  return wrap;
+}
 
     async function loadPhotos(filterUserId){
       clearMarkers();
@@ -699,84 +1089,142 @@
     }
 
     // Top Users + avatars
-    async function loadTopUsers(){
-      var r = await supabase.from("user_profiles").select("id,username,coin,posts,avatar_url");
-      var users = r && r.data ? r.data : [];
-      var me = await getSessionUser();
-      users.sort(function(a,b){ return (b.coin||0) - (a.coin||0); });
-      var top = users.slice(0,10);
+    // Top Users - modern cards with inline follow & quick view
+async function loadTopUsers(){
+  // skeleton göster
+  $.topList.innerHTML = '<div class="user-skel"></div><div class="user-skel"></div><div class="user-skel"></div>';
 
-      $.topList.innerHTML = "";
-      for (var i=0;i<top.length;i++){
-        (async function(u){
-          var av = u.avatar_url;
-          if (!av){
-            var fp = await supabase.from("photos").select("image_url").eq("user_id", u.id).order("id", {ascending:true}).limit(1);
-            if (fp && fp.data && fp.data.length) av = fp.data[0].image_url;
-          }
-          if (!av) av = "data:image/svg+xml;utf8,"+encodeURIComponent('<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"64\" height=\"64\"><rect width=\"100%\" height=\"100%\" fill=\"#e5e7eb\"/><text x=\"50%\" y=\"50%\" dominant-baseline=\"middle\" text-anchor=\"middle\" fill=\"#9ca3af\" font-size=\"14\">?</text></svg>');
+  // kullanıcıları çek
+  const r = await supabase.from("user_profiles").select("id,username,coin,posts,avatar_url");
+  const users = r?.data || [];
 
-          var li = document.createElement("li");
-          li.className = "user-item";
-          li.innerHTML =
-            '<div class="row" style="justify-content:space-between;">'+
-              '<div class="user-line"><img class="avatar-sm" src="'+av+'" alt=""><div><b>'+escapeHtml(u.username)+'</b><div class="muted">💰 '+(u.coin||0)+' • 🖼️ '+(u.posts||0)+'</div></div></div>'+
-              '<div>›</div>'+
-            '</div>';
+  // giriş yapan
+  const me = await getSessionUser();
 
-          var sub = document.createElement("div");
-          sub.className = "submenu";
-          sub.innerHTML =
-            '<div class="row" style="gap:8px; align-items:center; margin-bottom:6px;">'+
-              '<button class="btn followBtn">Follow</button>'+
-              '<span class="muted">Followers: <b class="fcount">0</b></span>'+
-            '</div>'+
-            '<div class="muted">Bu kullanıcının fotoğraflarını haritada gösterir.</div>';
-          li.appendChild(sub);
+  // skoru göre sırala, top 10
+  users.sort((a,b)=> (b.coin||0) - (a.coin||0));
+  const top = users.slice(0,10);
 
-          li.addEventListener("click", async function(ev){
-            if (ev.target.classList.contains("followBtn")) return;
-            sub.classList.toggle("active");
-            currentFilterUserId = u.id;
-            await loadPhotos(currentFilterUserId);
-          });
-
-          var fc = await supabase.from("follows").select("*",{count:"exact",head:true}).eq("following", u.id);
-          var cnt = fc && typeof fc.count === 'number' ? fc.count : 0;
-          sub.querySelector(".fcount").textContent = String(cnt);
-
-          var btn = sub.querySelector(".followBtn");
-          if (me){
-            var already = await supabase.from("follows").select("id").eq("follower", me.id).eq("following", u.id).limit(1);
-            if (already && already.data && already.data.length > 0) btn.textContent = "Following";
-            btn.onclick = async function(e){
-              e.stopPropagation();
-              var meNow = await getSessionUser(); if (!meNow) { alert("Önce giriş yapınız."); return; }
-              if (btn.textContent === "Follow") {
-                var ins = await supabase.from("follows").insert({ follower: meNow.id, following: u.id });
-                if (!ins.error) {
-                  btn.textContent = "Following";
-                  sub.querySelector(".fcount").textContent = String(parseInt(sub.querySelector(".fcount").textContent||"0",10)+1);
-                  await updateUserPanel(meNow.id);
-                  var prof = await supabase.from('user_profiles').select('coin').eq('id', u.id).single();
-                  if (prof && prof.data) await supabase.from('user_profiles').update({ coin: (prof.data.coin||0) + 10 }).eq('id', u.id);
-                }
-              } else {
-                var del = await supabase.from("follows").delete().eq("follower", meNow.id).eq("following", u.id);
-                if (!del.error) {
-                  btn.textContent = "Follow";
-                  sub.querySelector(".fcount").textContent = String(Math.max(0,(parseInt(sub.querySelector(".fcount").textContent||"0",10)-1)));
-                  await updateUserPanel(meNow.id);
-                }
-              }
-            };
-          } else {
-            btn.onclick = function(e){ e.stopPropagation(); alert("Follow için giriş yapın."); };
-          }
-          $.topList.appendChild(li);
-        })(top[i]);
-      }
+  // avatarları tamamla (gerekirse ilk foto)
+  const withAvatars = await Promise.all(top.map(async (u)=>{
+    let av = u.avatar_url;
+    if (!av){
+      const fp = await supabase.from("photos").select("image_url").eq("user_id", u.id).order("id", {ascending:true}).limit(1);
+      if (fp?.data?.length) av = fp.data[0].image_url;
     }
+    if (!av){
+      av = "data:image/svg+xml;utf8,"+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64"><rect width="100%" height="100%" fill="#e5e7eb"/><text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" fill="#9ca3af" font-size="14">?</text></svg>');
+    }
+    return { ...u, avatar_url: av };
+  }));
+
+  // follower sayıları (batched)
+  const ids = withAvatars.map(u=>u.id);
+  let followerCounts = {};
+  if (ids.length){
+    const fl = await supabase.from("follows").select("following").in("following", ids);
+    // reduce
+    (fl?.data || []).forEach(row=>{
+      const k = row.following;
+      followerCounts[k] = (followerCounts[k] || 0) + 1;
+    });
+  }
+
+  // takip durumları (me varsa)
+  let myFollowingSet = new Set();
+  if (me) {
+    const mf = await supabase.from("follows").select("following").eq("follower", me.id);
+    (mf?.data || []).forEach(x=> myFollowingSet.add(x.following));
+  }
+
+  // HTML kur
+  let html = '';
+  for (const u of withAvatars){
+    const fCount = followerCounts[u.id] || 0;
+    const amIFollowing = me ? myFollowingSet.has(u.id) : false;
+
+    html += `
+      <div class="user-card" data-uid="${u.id}">
+        <img class="user-avatar" src="${u.avatar_url}" alt="">
+        <div class="user-meta">
+          <div class="user-name">${escapeHtml(u.username || '—')}</div>
+          <div class="user-stats">
+            <span class="user-stat">💰 ${u.coin || 0}</span>
+            <span class="user-stat">🖼️ ${u.posts || 0}</span>
+            <span class="user-stat">👥 ${fCount}</span>
+          </div>
+        </div>
+        <div class="user-actions">
+          <button class="btn ghost view" data-uid="${u.id}">👁 Göster</button>
+          <button class="btn ${amIFollowing ? 'following' : 'follow'} followBtn" data-uid="${u.id}">
+            ${amIFollowing ? 'Following' : 'Follow'}
+          </button>
+        </div>
+      </div>
+    `;
+  }
+  $.topList.innerHTML = html;
+
+  // Göster (sadece bu kullanıcının fotoğraflarını haritada göster)
+  $.topList.querySelectorAll('.view').forEach(btn=>{
+    btn.onclick = async () => {
+      const uid = btn.getAttribute('data-uid');
+      currentFilterUserId = uid;
+      await loadPhotos(currentFilterUserId);
+    };
+  });
+
+  // Follow / Unfollow
+  $.topList.querySelectorAll('.followBtn').forEach(btn=>{
+    btn.onclick = async () => {
+      const uid = btn.getAttribute('data-uid');
+      const meNow = await getSessionUser();
+      if (!meNow){ alert('Follow için giriş yapınız.'); return; }
+
+      const isFollowing = btn.textContent.trim() === 'Following';
+
+      if (!isFollowing){
+        // follow
+        const ins = await supabase.from('follows').insert({ follower: meNow.id, following: uid });
+        if (!ins?.error){
+          // coin ödülü: takip edilen kullanıcıya +10 (opsiyon: aynı mantık korunuyor)
+          const prof = await supabase.from('user_profiles').select('coin').eq('id', uid).single();
+          if (prof?.data){
+            await supabase.from('user_profiles').update({ coin: (prof.data.coin||0) + 10 }).eq('id', uid);
+          }
+          // UI güncelle
+          btn.textContent = 'Following';
+          btn.classList.remove('follow'); btn.classList.add('following');
+          // followers sayısını arayüzde arttır
+          const card = btn.closest('.user-card');
+          const stat = card?.querySelector('.user-stats .user-stat:nth-child(3)');
+          if (stat){
+            const parts = stat.textContent.trim().split(' ');
+            const num = parseInt(parts[1] || parts[0] || '0', 10);
+            stat.textContent = `👥 ${isNaN(num) ? 1 : num + 1}`;
+          }
+          await updateUserPanel(meNow.id);
+        }
+      } else {
+        // unfollow
+        const del = await supabase.from('follows').delete().eq('follower', meNow.id).eq('following', uid);
+        if (!del?.error){
+          btn.textContent = 'Follow';
+          btn.classList.remove('following'); btn.classList.add('follow');
+          const card = btn.closest('.user-card');
+          const stat = card?.querySelector('.user-stats .user-stat:nth-child(3)');
+          if (stat){
+            const parts = stat.textContent.trim().split(' ');
+            const num = parseInt(parts[1] || parts[0] || '0', 10);
+            stat.textContent = `👥 ${Math.max(0, isNaN(num) ? 0 : num - 1)}`;
+          }
+          await updateUserPanel(meNow.id);
+        }
+      }
+    };
+  });
+}
+
 
     // Sol panel kullanıcı arama
     $.searchUser.addEventListener("input", async function(e){
@@ -831,6 +1279,30 @@
         setModal(false); pendingLatLng=null; await updateUserPanel(user.id); await loadPhotos(currentFilterUserId); await refreshAvatarPreview(user.id); alert("Fotoğraf yüklendi!");
       }catch(e){ $.uploadErr.textContent="Beklenmeyen hata: "+(e&&e.message?e.message:e); }
     };
+    // =========================
+// Fotoğraf Konumunu Güncelleme
+// =========================
+async function updatePhotoLocation(photoId, newLat, newLng) {
+  try {
+    const { error } = await supabase
+      .from("photos")
+      .update({ lat: newLat, lng: newLng })
+      .eq("id", photoId);
+
+    if (error) {
+      alert("Konum güncellenemedi: " + error.message);
+      return;
+    }
+
+    // Haritayı güncelle
+    await loadPhotos(currentFilterUserId);
+    alert("Konum başarıyla değiştirildi!");
+  } catch (e) {
+    console.error(e);
+    alert("Beklenmeyen hata oluştu!");
+  }
+}
+
 
     // Sağ panel: Profile Settings toggle
     $.toggleProfileSettings.onclick = function(){ $.profileSettingsSection.classList.toggle('hidden'); };
@@ -855,59 +1327,111 @@
     };
 
     // Photo Settings (right panel içi)
-    async function renderPhotoSettings(){
-      var me = await getSessionUser(); if (!me){ $.psList.innerHTML='<div class="muted">Oturum gerekli.</div>'; return; }
-      var r = await supabase.from('photos').select('id,image_url,lat,lng').eq('user_id', me.id).order('id',{ascending:false});
-      var ph = r && r.data ? r.data : [];
-      if (!ph.length){ $.psList.innerHTML='<div class="muted">Henüz fotoğraf yok.</div>'; return; }
-      var html = '';
-      for (var i=0;i<ph.length;i++){
-        var p = ph[i];
-        html += '<div style="display:flex;gap:10px;align-items:center;border:1px solid #eee;border-radius:10px;padding:8px;margin-bottom:8px;">'+
-                '<img src="'+p.image_url+'" style="width:64px;height:64px;object-fit:cover;border-radius:8px;" loading="lazy" decoding="async"/>'+
-                '<div style="flex:1;"><div>ID: <b>'+p.id+'</b></div><div class="muted">Lat: '+p.lat.toFixed(5)+' Lng: '+p.lng.toFixed(5)+'</div></div>'+
-                '<div class="row" style="gap:6px;flex-wrap:wrap;">'+
-                  '<button class="btn ghost" data-ps-go="'+p.id+'">Göster</button>'+
-                  '<button class="btn" data-ps-pick="'+p.id+'">Konum Seç</button>'+
-                  '<button class="btn" style="border-color:#f3c;color:#c00;" data-ps-del="'+p.id+'">Sil</button>'+
-                '</div>'+
-              '</div>';
-      }
-      $.psList.innerHTML = html;
+  async function renderPhotoSettings() {
+  const me = await getSessionUser();
+  if (!me) {
+    $.psList.innerHTML = '<div class="muted">Oturum gerekli.</div>';
+    return;
+  }
 
-      // Göster
-      $.psList.querySelectorAll('[data-ps-go]').forEach(function(b){
-        b.onclick = async function(){ var id=parseInt(b.getAttribute('data-ps-go'),10); var p=await supabase.from('photos').select('*').eq('id',id).single(); if (p&&p.data){ currentFilterUserId=null; await loadPhotos(null); map.setView([p.data.lat,p.data.lng], 13); } };
-      });
-      // Konum seç (map click)
-      $.psList.querySelectorAll('[data-ps-pick]').forEach(function(b){
-        b.onclick = async function(){
-          var id = parseInt(b.getAttribute('data-ps-pick'),10);
-          var pr = await supabase.from('photos').select('*').eq('id',id).single(); var p = pr&&pr.data?pr.data:null; if(!p) return;
-          $.hint.classList.add("active");
-          var onClick = async function(e){
-            $.hint.classList.remove("active"); map.off("click", onClick);
-            var updates = { lat: e.latlng.lat, lng: e.latlng.lng };
-            var up = await supabase.from('photos').update(updates).eq('id', id);
-            if (!up.error){ await loadPhotos(currentFilterUserId); await renderPhotoSettings(); map.setView([updates.lat,updates.lng], 14); }
-          };
-          map.once("click", onClick);
-        };
-      });
-      // Sil
-      $.psList.querySelectorAll('[data-ps-del]').forEach(function(b){
-        b.onclick = async function(){
-          var id=parseInt(b.getAttribute('data-ps-del'),10);
-          if (!confirm('Fotoğraf silinsin mi?')) return;
-          await supabase.from('photos').delete().eq('id', id);
-          var me2 = await getSessionUser();
-          var prof = await supabase.from('user_profiles').select('posts').eq('id', me2.id).single();
-          if (prof && prof.data) await supabase.from('user_profiles').update({ posts: Math.max(0,(prof.data.posts||0)-1) }).eq('id', me2.id);
+  const r = await supabase
+    .from('photos')
+    .select('id,image_url,lat,lng')
+    .eq('user_id', me.id)
+    .order('id', { ascending: false });
+
+  const ph = r?.data || [];
+  if (!ph.length) {
+    $.psList.innerHTML = '<div class="muted">Henüz fotoğraf yok.</div>';
+    return;
+  }
+
+  let html = '';
+  for (const p of ph) {
+    html += `
+      <div class="photo-card">
+        <img src="${p.image_url}" class="photo-thumb" loading="lazy" decoding="async" />
+        <div class="photo-info">
+          <div><b>ID:</b> ${p.id}</div>
+          <div class="muted">📍 ${p.lat.toFixed(5)}, ${p.lng.toFixed(5)}</div>
+          <div class="photo-actions">
+            <button class="btn ghost" data-ps-go="${p.id}">👁 Göster</button>
+            <button class="btn edit-btn" data-ps-pick="${p.id}">📍 Konumu Güncelle</button>
+            <button class="btn del-btn" data-ps-del="${p.id}">🗑 Sil</button>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  $.psList.innerHTML = html;
+
+  // Göster
+  $.psList.querySelectorAll('[data-ps-go]').forEach(b => {
+    b.onclick = async function() {
+      const id = parseInt(b.dataset.psGo, 10);
+      const { data } = await supabase.from('photos').select('*').eq('id', id).single();
+      if (data) {
+        currentFilterUserId = null;
+        await loadPhotos(null);
+        map.setView([data.lat, data.lng], 13);
+      }
+    };
+  });
+
+  // Konum Güncelle
+  $.psList.querySelectorAll('[data-ps-pick]').forEach(b => {
+    b.onclick = async function() {
+      const id = parseInt(b.dataset.psPick, 10);
+      const { data: p } = await supabase.from('photos').select('*').eq('id', id).single();
+      if (!p) return;
+
+      $.hint.classList.add("active");
+      const onClick = async function(e) {
+        $.hint.classList.remove("active");
+        map.off("click", onClick);
+
+        const updates = { lat: e.latlng.lat, lng: e.latlng.lng };
+        const { error } = await supabase.from('photos').update(updates).eq('id', id);
+
+        if (!error) {
           await loadPhotos(currentFilterUserId);
           await renderPhotoSettings();
-        };
-      });
-    }
+          map.setView([updates.lat, updates.lng], 14);
+        } else {
+          alert("Konum güncellenemedi: " + error.message);
+        }
+      };
+      map.once("click", onClick);
+    };
+  });
+
+  // Sil
+  $.psList.querySelectorAll('[data-ps-del]').forEach(b => {
+    b.onclick = async function() {
+      const id = parseInt(b.dataset.psDel, 10);
+      if (!confirm('Fotoğraf silinsin mi?')) return;
+
+      const { error } = await supabase.from('photos').delete().eq('id', id);
+      if (error) {
+        alert("Silme hatası: " + error.message);
+        return;
+      }
+
+      const me2 = await getSessionUser();
+      const prof = await supabase.from('user_profiles').select('posts').eq('id', me2.id).single();
+      if (prof?.data) {
+        await supabase
+          .from('user_profiles')
+          .update({ posts: Math.max(0, (prof.data.posts || 0) - 1) })
+          .eq('id', me2.id);
+      }
+
+      await loadPhotos(currentFilterUserId);
+      await renderPhotoSettings();
+    };
+  });
+}
 
     // Auth (login/register/logout)
     $.showRegister.onclick = function(){ $.loginBox.style.display="none"; $.regBox.style.display="block"; };
@@ -975,16 +1499,18 @@
       var isIOS=/iphone|ipad|ipod/i.test(navigator.userAgent); var isStandalone=(window.matchMedia&&window.matchMedia('(display-mode: standalone)').matches)||window.navigator.standalone;
       if (isIOS && !isStandalone){ var tip=document.createElement('div'); tip.style.position='fixed'; tip.style.left='50%'; tip.style.transform='translateX(-50%)'; tip.style.bottom='20px'; tip.style.zIndex='3500'; tip.style.background='#111'; tip.style.color='#fff'; tip.style.padding='8px 12px'; tip.style.borderRadius='999px'; tip.textContent='➕ Paylaş › Ana Ekrana Ekle'; document.body.appendChild(tip); setTimeout(function(){ try{ tip.remove(); }catch(e){} }, 8000); }
     })();
-    </script> 
+    </script> <!-- ilk script burada kapanacak -->
 
+<script>
 
-    <script>
   // --- Sağ panel hamburger butonu kontrolü ---
   (function(){
     var rightPanel = document.querySelector('.right');
     var rightMenuToggle = document.getElementById('rightMenuToggle');
 
     if (rightPanel && rightMenuToggle) {
+
+
       // iOS tıklama gecikmesi yaşamamak için hem touchstart hem click
       var toggle = function(e){
         e.preventDefault && e.preventDefault();
@@ -1001,4 +1527,3 @@
   </script>
 </body>
 </html>
-
