@@ -451,6 +451,182 @@
   animation: skel 1.2s ease-in-out infinite; border: 1px solid #eee;
 }
 @keyframes skel { 0%{background-position:-200px 0} 100%{background-position:200px 0} }
+.me-header { 
+  display:flex; 
+  align-items:center; 
+  gap:10px; 
+  margin: 6px 0 8px; 
+}
+.me-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 1px solid #e5e5e5;
+}
+/* === Sidebar stabilizer === */
+.app { display: flex; }
+
+.sidebar {
+  position: relative;
+  z-index: 1500;           /* sağdaki öğeler üstüne çıkmasın */
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  flex: 0 0 300px;         /* genişliği sabitle */
+  min-width: 250px;
+  max-width: 380px;
+}
+
+.mapwrap { 
+  flex: 1 1 auto;
+  min-width: 0;            /* grid taşmalarını engeller */
+}
+
+.right { 
+  flex: 0 0 300px;         /* sağ panelin de genişliğini sabitle */
+}
+
+#topList, #searchResults { width: 100%; }
+/* Masaüstünde sidebar asla saklı kalmasın */
+@media (min-width: 769px) {
+  .sidebar { transform: none !important; }
+  .right   { transform: none !important; }
+}
+.user-name { 
+  white-space: nowrap; 
+  overflow: hidden; 
+  text-overflow: ellipsis; 
+  max-width: 100%;
+}
+/* ==== Top Users overlap fix ==== */
+#topList { display: grid; grid-template-columns: 1fr; gap: 10px; }
+
+#topList .user-card {
+  display: grid;
+  grid-template-columns: 42px 1fr;       /* 2 sütun: avatar + içerik */
+  grid-template-rows: auto auto;         /* 2 satır: meta + actions */
+  grid-template-areas:
+    "ava meta"
+    "ava actions";
+  align-items: center;
+  column-gap: 10px;
+}
+
+#topList .user-avatar { grid-area: ava; }
+#topList .user-meta   { grid-area: meta; min-width: 0; }
+#topList .user-actions{
+  grid-area: actions;
+  justify-content: flex-start;
+  flex-wrap: wrap;                        /* dar alanda alta sark */
+  gap: 8px;
+}
+
+#topList .user-name { 
+  white-space: nowrap; 
+  overflow: hidden; 
+  text-overflow: ellipsis; 
+}
+
+@media (min-width: 520px){
+  /* Geniş panelde eski yatay düzene dön (isteğe bağlı) */
+  #topList .user-card{
+    grid-template-columns: 42px 1fr auto;
+    grid-template-rows: auto;
+    grid-template-areas: "ava meta actions";
+  }
+  #topList .user-actions{ justify-content: flex-end; }
+}
+
+/* ==== Top Users layout reset (override) ==== */
+#topList {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 10px !important;
+}
+
+#topList > li { list-style: none; }
+
+#topList > li .user-card {
+  display: grid !important;
+  grid-template-columns: 42px 1fr !important;
+  grid-template-rows: auto auto !important;
+  grid-template-areas:
+    "ava meta"
+    "ava actions" !important;
+  align-items: center !important;
+  column-gap: 10px !important;
+}
+
+#topList .user-avatar { grid-area: ava !important; }
+#topList .user-meta   { grid-area: meta !important; min-width: 0 !important; }
+#topList .user-actions{
+  grid-area: actions !important;
+  display: flex !important;
+  gap: 8px !important;
+  flex-wrap: wrap !important;
+  justify-content: flex-start !important;
+  margin-top: 4px !important;
+  position: static !important;   /* olası mutlak konumlandırmayı sıfırla */
+  z-index: auto !important;
+}
+
+#topList .user-name{
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  max-width: 100% !important;
+}
+.user-actions .btn { max-width: 100%; }              /* dar alanda taşmasın */
+.user-stats { flex-wrap: wrap; }                      /* ikonlar sıkışmasın */
+
+/* Harita altı buton alanı */
+.map-footer{
+  padding: 10px;
+  border-top: 1px solid #e5e5e5;
+  background: rgba(255,255,255,.92);
+  backdrop-filter: blur(8px);
+}
+.map-footer .btn{ width: 100%; }
+
+#topList .user-avatar{
+  width: 63px !important;
+  height: 63px !important;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 1px solid #eee;
+}
+
+/* Kart ızgarasında sol sütunu yeni genişliğe göre ayarla */
+#topList .user-card{
+  grid-template-columns: 63px 1fr !important;
+}
+
+/* Sol panel: arama sonuçlarındaki küçük avatarlar (%50 artış: 22→33) */
+.avatar-sm{
+  width: 33px !important;
+  height: 33px !important;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+/* Sağ panel: header’daki küçük avatar (%50 artış: 36→54) */
+.me-avatar{
+  width: 75px !important;
+  height: 75px !important;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 1px solid #e5e5e5;
+}
+
+/* Sağ panel: Profile Settings içindeki büyük avatar (%50 artış: 56→84) */
+.profile-avatar{
+  width: 84px !important;
+  height: 84px !important;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 1px solid #ddd;
+}
 
   </style>
 </head>
@@ -486,6 +662,10 @@
       </div>
 
       <div id="map"></div>
+      <div class="map-footer">
+      <button id="addPhoto" class="btn primary">+ Fotoğraf</button>
+      </div>
+
       <div id="hint" class="hint">Haritadan konum seçin…</div>
 
       <div id="overlay" class="overlay"></div>
@@ -509,8 +689,7 @@
       <!-- SAĞ PANEL -->
     </main>
     <aside class="right">
-      <button id="addPhoto" class="btn primary" style="width:100%; margin-bottom:10px;">+ Fotoğraf</button>
-
+      
       <!-- Bildirimler -->
       <div class="notifWrap">
         <div class="row" style="gap:8px; align-items:center;">
@@ -556,6 +735,8 @@
       <!-- KULLANICI -->
       <div id="userBox" style="display:none;">
         <h3 class="title" id="hello">Hoş geldin!</h3>
+        <div class="me-header">
+        <img id="meAvatar" class="me-avatar" src="" alt="avatar"/></div>
         <div class="kpi">Email: <b id="meEmail">–</b></div>
         <div class="kpi">Coin: <b id="meCoin">0</b></div>
         <div class="kpi">Posts: <b id="mePosts">0</b></div>
@@ -726,6 +907,18 @@
       notifDropdown: qs("#notifDropdown"), notifList: qs("#notifList"),
       notifBadge: qs("#notifBadge"), btnNotif: qs("#btnNotif"), btnReadAll: qs("#btnReadAll"), closeNotif: qs("#closeNotif")
     };
+    // Avatar dosyası seçilince anlık önizleme (profile + sağ panel header)
+if ($.editAvatar) {
+  $.editAvatar.addEventListener('change', function(){
+    var f = this.files && this.files[0];
+    if (!f) return;
+    var temp = URL.createObjectURL(f);
+    if ($.avatarPreview) $.avatarPreview.src = temp;
+    var meImg = document.getElementById('meAvatar');
+    if (meImg) meImg.src = temp;
+  });
+}
+
 
     function setModal(open){ $.overlay.classList.toggle("active", open); $.photoForm.classList.toggle("active", open); }
 
@@ -747,9 +940,15 @@
     }
 
     async function refreshAvatarPreview(userId){
-      var url = await getAvatarUrl(userId);
-      $.avatarPreview.src = url || "";
-    }
+  var url = await getAvatarUrl(userId) || "";
+  // cache-bust: upsert edilen aynı URL'yi tarayıcıdan taze çekmek için
+  var bust = url ? (url + (url.includes('?') ? '&' : '?') + 't=' + Date.now()) : "";
+
+  if ($.avatarPreview) $.avatarPreview.src = bust || "";
+  var meImg = document.getElementById('meAvatar');
+  if (meImg) meImg.src = bust || "";
+}
+
 
     async function updateUserPanel(userId){
       var profileRes = await supabase.from("user_profiles").select("*").eq("id", userId).single();
@@ -784,7 +983,9 @@
       await loadPhotos(currentFilterUserId);
       await loadTopUsers();
       await loadNotifications(user.id);
-      subscribeNotifications(user.id);
+       if (typeof subscribeNotifications === 'function') {
+        subscribeNotifications(user.id);
+}
       await refreshAvatarPreview(user.id);
     }
     supabase.auth.onAuthStateChange(function(){ refreshUI(); });
@@ -847,6 +1048,25 @@ async function loadNotifications(userId){
     const arr = p?.data || [];
     for (const it of arr){ nameMap[it.id] = it.username; }
   }
+  function subscribeNotifications(userId){
+  // Eski kanalı temizle
+  try {
+    if (notifChannel) supabase.removeChannel(notifChannel);
+  } catch (e) { /* yoksay */ }
+
+  // Yeni kanal: sadece bu kullanıcıya gelen yeni bildirim INSERT'lerinde tetiklensin
+  notifChannel = supabase
+    .channel('notif:' + userId)
+    .on('postgres_changes', {
+      event: 'INSERT',
+      schema: 'public',
+      table: 'notifications',
+      filter: 'recipient=eq.' + userId
+    }, async () => {
+      await loadNotifications(userId);
+    })
+    .subscribe();
+}
 
   // okunmamış sayısı
   let unread = 0;
@@ -918,6 +1138,20 @@ async function loadNotifications(userId){
       await loadNotifications(userId);
     };
   });
+}
+function subscribeNotifications(userId){
+  try { if (notifChannel) supabase.removeChannel(notifChannel); } catch(e){}
+  notifChannel = supabase
+    .channel('notif:' + userId)
+    .on('postgres_changes', {
+      event: 'INSERT',
+      schema: 'public',
+      table: 'notifications',
+      filter: 'recipient=eq.' + userId
+    }, async () => {
+      await loadNotifications(userId);
+    })
+    .subscribe();
 }
 
     $.btnReadAll.onclick = async function(){ var me = await getSessionUser(); if (!me) return; await supabase.from("notifications").update({ is_read: true }).eq("recipient", me.id).eq("is_read", false); await loadNotifications(me.id); };
@@ -1144,24 +1378,27 @@ async function loadTopUsers(){
     const amIFollowing = me ? myFollowingSet.has(u.id) : false;
 
     html += `
-      <div class="user-card" data-uid="${u.id}">
-        <img class="user-avatar" src="${u.avatar_url}" alt="">
-        <div class="user-meta">
-          <div class="user-name">${escapeHtml(u.username || '—')}</div>
-          <div class="user-stats">
-            <span class="user-stat">💰 ${u.coin || 0}</span>
-            <span class="user-stat">🖼️ ${u.posts || 0}</span>
-            <span class="user-stat">👥 ${fCount}</span>
-          </div>
-        </div>
-        <div class="user-actions">
-          <button class="btn ghost view" data-uid="${u.id}">👁 Göster</button>
-          <button class="btn ${amIFollowing ? 'following' : 'follow'} followBtn" data-uid="${u.id}">
-            ${amIFollowing ? 'Following' : 'Follow'}
-          </button>
+  <li>
+    <div class="user-card" data-uid="${u.id}">
+      <img class="user-avatar" src="${u.avatar_url}" alt="">
+      <div class="user-meta">
+        <div class="user-name">${escapeHtml(u.username || '—')}</div>
+        <div class="user-stats">
+          <span class="user-stat">💰 ${u.coin || 0}</span>
+          <span class="user-stat">🖼️ ${u.posts || 0}</span>
+          <span class="user-stat">👥 ${fCount}</span>
         </div>
       </div>
-    `;
+      <div class="user-actions">
+        <button class="btn ghost view" data-uid="${u.id}">👁 Göster</button>
+        <button class="btn ${amIFollowing ? 'following' : 'follow'} followBtn" data-uid="${u.id}">
+          ${amIFollowing ? 'Following' : 'Follow'}
+        </button>
+      </div>
+    </div>
+  </li>
+`;
+
   }
   $.topList.innerHTML = html;
 
